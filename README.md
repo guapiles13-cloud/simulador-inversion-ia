@@ -4,7 +4,7 @@
 
 Versión 0.1: preparación del proyecto y comprobador de viabilidad. **Todavía no implementa carteras, operaciones, gráficos ni estrategias.** Su desarrollo queda condicionado a validar las conexiones acordadas. No hay datos inventados.
 
-Se comprobó que Node 24 y Git están disponibles en el entorno de Codex. No se encontró una clave de Alpha Vantage configurada ni un servicio Ollama respondiendo. No es posible certificar la cobertura gratuita de los seis activos ni el rendimiento de IA hasta configurar ambos requisitos.
+Node 24 y Git están disponibles. La clave personal está configurada, las seis series reales han sido validadas y Ollama responde con llama3.2:3b. El modelo todavía comete errores en los conceptos financieros: su conexión funciona, pero no debe tomarse como explicador validado. Consulta VERIFICACION.md para resultados y límites.
 
 ## Abrir
 

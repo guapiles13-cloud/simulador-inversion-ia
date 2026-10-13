@@ -28,3 +28,18 @@ La interfaz se abrió y revisó visualmente en el navegador integrado, en http:/
 ## Decisión de avance
 
 Etapa 1 preparada; conexiones de la etapa 2 verificadas. Antes de integrar la IA como explicador, corregir/limitar sus explicaciones y probarlas con casos de compra, venta, igualdad y datos insuficientes. Se pueden preparar mercado y gráficos con fechas alineadas. El simulador no está implementado. No se han publicado claves en el chat; los modelos se guardan en data/models.
+
+## Corrección de fechas y explicaciones
+
+- Implementado análisis por intersección de sesiones: los seis activos terminan el 2026-10-12 para la comparación, con 99 registros comunes. Las series originales permanecen intactas.
+- Probado un corte al 2026-08-03: se devuelven 50 sesiones y ningún cierre posterior, incluso si ya está guardado en la base.
+- Cálculo SMA20/SMA50 con comparación decimal exacta; explicación esencial producida por código.
+- IA limitada a clasificación estructurada con validación de señal, comparación, concepto y advertencia. El comentario visible usa frases revisadas. Texto libre, señales contradictorias, campos extra y garantías se rechazan.
+- Diez pruebas automáticas correctas y compilación correcta.
+- Ollama real pasó COMPRA, VENTA, MANTENER y SIN_DATOS, alrededor de 3 segundos por caso con el modelo ya cargado. La prueba inicial de arranque fue de 7,6 segundos.
+- API de explicación validada con datos reales de AAPL hasta la fecha común; segunda consulta devuelve la misma respuesta guardada.
+- Panel revisado en navegador integrado: fecha original y de análisis, indicadores, señal educativa, explicación y comentario.
+
+La mejora garantiza las restricciones del texto mostrado, no la exactitud de respuestas financieras libres del modelo. No hay carteras ni operaciones todavía; el tratamiento completo de acciones corporativas y las conversiones de las futuras operaciones siguen pendientes.
+
+Referencia de respuestas estructuradas: https://docs.ollama.com/capabilities/structured-outputs (consultada el 13 de octubre de 2026).

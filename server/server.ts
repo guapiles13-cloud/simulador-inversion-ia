@@ -3,6 +3,7 @@ import {mkdirSync, readFileSync, existsSync} from 'node:fs';
 import {resolve, extname, sep} from 'node:path';
 import {DatabaseSync} from 'node:sqlite';
 import {symbols, parseDaily, parseFx, getJson} from './providers.ts';
+import {alignSeries,analyze,requestComment} from './analysis.ts';
 
 const root = resolve(import.meta.dirname, '..');
 mkdirSync(resolve(root,'data'),{recursive:true});
@@ -10,11 +11,18 @@ const db = new DatabaseSync(resolve(root,'data','simulador.sqlite'));
 db.exec(`CREATE TABLE IF NOT EXISTS checks (name TEXT PRIMARY KEY, value TEXT NOT NULL);
 CREATE TABLE IF NOT EXISTS snapshots (symbol TEXT PRIMARY KEY, source TEXT NOT NULL, fetched_at TEXT NOT NULL, payload TEXT NOT NULL);
 CREATE TABLE IF NOT EXISTS attempts (symbol TEXT NOT NULL, day TEXT NOT NULL, PRIMARY KEY(symbol,day));`);
+db.exec('CREATE TABLE IF NOT EXISTS explanations (id TEXT PRIMARY KEY, value TEXT NOT NULL)');
 type Check = {ok: boolean; message: string; checkedAt?: string; count?: number; lastDate?: string};
 function save(name: string, value: Check) {db.prepare('INSERT OR REPLACE INTO checks VALUES (?,?)').run(name,JSON.stringify({...value,checkedAt:new Date().toISOString()}));}
 function checks(): Record<string,Check> {return Object.fromEntries((db.prepare('SELECT * FROM checks').all() as {name:string;value:string}[]).map(r=>[r.name,JSON.parse(r.value)]));}
 const key = process.env.ALPHA_VANTAGE_API_KEY?.trim();
 let busy = false;
+let explaining = false;
+function market(asOf?:string){
+  const stored=(db.prepare("SELECT symbol,payload FROM snapshots WHERE symbol<>'BCE'").all() as {symbol:string;payload:string}[]).map(r=>({symbol:r.symbol,bars:JSON.parse(r.payload).bars}));
+  const aligned=alignSeries(stored,symbols,asOf);
+  return {asOf:aligned.asOf,count:aligned.count,ready:aligned.ready,assets:aligned.series.map(s=>({symbol:s.symbol,originalLastDate:stored.find(r=>r.symbol===s.symbol)?.bars.filter((b:{date:string})=>!asOf||b.date<=asOf).at(-1)?.date||null,excludedCount:aligned.excluded.find(r=>r.symbol===s.symbol)!.dates.filter(d=>!asOf||d<=asOf).length,analysis:analyze(s.symbol,s.bars),bars:s.bars}))};
+}
 const day = ()=>new Date().toLocaleDateString('en-CA',{timeZone:'Europe/Madrid'});
 async function diagnose() {
   if (busy) return;
@@ -54,14 +62,14 @@ async function diagnose() {
       for(const model of candidates) {
         try {
           const start=Date.now();
-          const result=await getJson('http://127.0.0.1:11434/api/chat',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model,stream:false,messages:[{role:'user',content:'Responde en español en dos frases: explica qué es una media móvil de precios. No aconsejes inversiones.'}],options:{temperature:0,num_predict:120}})});
-          const content=result.message?.content;
-          if(typeof content!=='string'||content.trim().length<20||Date.now()-start>45000) throw new Error('Rendimiento');
-          save('ollama',{ok:true,message:`${model}: prueba recibida en ${((Date.now()-start)/1000).toFixed(1)} s. Revisar calidad en español: ${content.slice(0,600)}`});passed=true;break;
+          const analysis=market().assets[0].analysis;
+          const comment=await requestComment(analysis,model);
+          if(Date.now()-start>45000)throw new Error('Rendimiento');
+          save('ollama',{ok:true,message:`${model}: respuesta estructurada validada en ${comment.seconds} s. Los conceptos y las cifras los determina la aplicación; no se publica texto libre del modelo.`});passed=true;break;
         } catch { /* Try the explicitly planned smaller local model. */ }
       }
       if(!passed) throw new Error('Modelos sin respuesta');
-    } catch {save('ollama',{ok:false,message:'IA local pendiente. Instala Ollama, descarga llama3.2:3b (o 1b) y vuelve a comprobar.'});}
+    } catch {save('ollama',{ok:false,message:'No se validó una respuesta de IA local: comprueba servicio, modelo, rendimiento o concordancia con los datos. La explicación calculada sigue disponible.'});}
   } finally {busy=false;}
 }
 const port=Number(process.env.PORT || 4317);
@@ -77,7 +85,31 @@ createServer(async(req,res)=>{
     if(req.method==='POST'&&req.headers.origin!==origin) return json(403,{error:'Origen no permitido.'});
     if(url.pathname==='/api/status'&&req.method==='GET') {
       const results=checks();
-      return json(200,{busy,keyConfigured:!!key&&key!=='demo',checks:results,ready:[...symbols,'BCE','ollama'].every(s=>results[s]?.ok),stage:'viabilidad',symbols});
+      return json(200,{busy,keyConfigured:!!key&&key!=='demo',checks:results,ready:[...symbols,'BCE','ollama'].every(s=>results[s]?.ok)&&market().ready,stage:'viabilidad',symbols});
+    }
+    if(url.pathname==='/api/market'&&req.method==='GET'){
+      const asOf=url.searchParams.get('asOf')||undefined;
+      if(asOf&&!/^\d{4}-\d{2}-\d{2}$/.test(asOf))return json(400,{error:'Fecha no válida.'});
+      return json(200,market(asOf));
+    }
+    if(url.pathname==='/api/explain'&&req.method==='POST'){
+      if(explaining||busy)return json(409,{error:'Espera a que termine la comprobación actual.'});
+      let body='';for await(const chunk of req){body+=chunk.toString();if(body.length>2048)return json(413,{error:'Solicitud demasiado grande.'});}
+      let input:{symbol?:string;asOf?:string};try{input=JSON.parse(body);}catch{return json(400,{error:'Solicitud no válida.'});}
+      if(!input||!symbols.includes(input.symbol||'')||(input.asOf&&!/^\d{4}-\d{2}-\d{2}$/.test(input.asOf)))return json(400,{error:'Activo o fecha no válidos.'});
+      const analysis=market(input.asOf).assets.find(a=>a.symbol===input.symbol)!.analysis;
+      const model=process.env.OLLAMA_MODEL||'llama3.2:3b';
+      const cacheId=JSON.stringify({analysis,model});
+      const cached=db.prepare('SELECT value FROM explanations WHERE id=?').get(cacheId) as {value:string}|undefined;
+      if(cached)return json(200,JSON.parse(cached.value));
+      explaining=true;
+      try{
+        const comment=await requestComment(analysis,model);
+        const result={analysis,comment,notice:'La IA clasifica conceptos permitidos; el texto mostrado utiliza frases revisadas. No es una predicción ni una orden.'};
+        db.prepare('INSERT OR REPLACE INTO explanations VALUES (?,?)').run(cacheId,JSON.stringify(result));
+        return json(200,result);
+      }catch{return json(200,{analysis,comment:{status:'no_disponible',text:'Explicación de IA no disponible o rechazada por no concordar con los datos.'},notice:'Se conserva la explicación calculada; ninguna operación se ejecuta.'});}
+      finally{explaining=false;}
     }
     if(url.pathname==='/api/check'&&req.method==='POST') {void diagnose().catch(()=>save('general',{ok:false,message:'Error en diagnóstico.'}));return json(202,{started:true});}
     if(url.pathname.startsWith('/api/')) return json(404,{error:'Función todavía no implementada.'});

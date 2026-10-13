@@ -2,9 +2,19 @@
 
 ## Estado real
 
-Versión 0.1: preparación del proyecto y comprobador de viabilidad. **Todavía no implementa carteras, operaciones, gráficos ni estrategias.** Su desarrollo queda condicionado a validar las conexiones acordadas. No hay datos inventados.
+Preparación, comprobador de viabilidad y panel de análisis alineado. **Todavía no implementa carteras, operaciones ni gráficos.** Calcula la regla educativa de medias de 20/50 sesiones, sin ejecutar operaciones. No hay datos inventados en los análisis de activos reales.
 
-Node 24 y Git están disponibles. La clave personal está configurada, las seis series reales han sido validadas y Ollama responde con llama3.2:3b. El modelo todavía comete errores en los conceptos financieros: su conexión funciona, pero no debe tomarse como explicador validado. Consulta VERIFICACION.md para resultados y límites.
+Node 24 y Git están disponibles. La clave personal está configurada, las seis series reales han sido validadas y Ollama responde con llama3.2:3b. Las respuestas libres del modelo pueden contener errores. El panel nuevo usa una respuesta estructurada, comprueba que coincida con los cálculos y muestra únicamente frases revisadas. Consulta VERIFICACION.md para resultados y límites.
+
+## Fechas y explicaciones
+
+El panel «Fechas alineadas y explicación comprobable» compara solo sesiones presentes en todos los activos. Conserva las series originales y muestra su última fecha junto a la fecha común. No rellena huecos ni usa cierres posteriores a la fecha de análisis. En los datos probados hay 99 sesiones comunes y la última es el 12 de octubre de 2026.
+
+SMA20 y SMA50 son los promedios de los últimos 20 y 50 cierres de esas sesiones compartidas. La comparación se realiza con enteros de precisión arbitraria, manteniendo los decimales originales; las cifras visibles se truncan a seis decimales. Si faltan 50 registros no se produce señal. COMPRA/VENTA/MANTENER son resultados de una regla sin tener en cuenta una cartera, todavía inexistente.
+
+La explicación esencial se genera desde los cálculos. Ollama clasifica señal, relación, concepto y advertencia mediante JSON limitado. La aplicación exige concordancia exacta, rechaza campos extra, conceptos ajenos y garantías. El comentario visible se construye con frases revisadas: no es prosa financiera libre creada por el modelo. Si falla la validación o la conexión, se conserva la explicación calculada. Se guarda la respuesta validada según datos, fecha, modelo y versión para no repetir consultas innecesarias.
+
+Interfaces locales: GET /api/market (opcional asOf=AAAA-MM-DD) devuelve solo sesiones comunes hasta el corte; POST /api/explain recibe symbol y asOf, y devuelve el análisis y un comentario validado o no disponible. No permiten órdenes ni cambian saldos.
 
 ## Abrir
 
@@ -71,4 +81,4 @@ Condiciones acordadas: 100 EUR por cartera, fracciones, 0,1 % de comisión y 0,1
 
 ## Verificación
 
-`npm test` comprueba orden temporal, conservación de decimales, coherencia OHLC, errores de cuota, histórico insuficiente y extracción BCE. `npm run build` comprueba tipos y compila la interfaz. Las pruebas de operaciones e inversión se añadirán al implementar esos componentes.
+`npm test` incluye diez pruebas: lectura de proveedores, intersección de fechas, cortes históricos, señales, precisión decimal y rechazo de comentarios incoherentes. `npm run build` comprueba tipos y compila la interfaz. Las pruebas de operaciones se añadirán al implementar esos componentes.

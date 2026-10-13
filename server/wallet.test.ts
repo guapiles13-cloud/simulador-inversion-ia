@@ -8,6 +8,7 @@ import {newState,queueOrder,advance,valueState,units,decimal,fxBefore,calculateF
 import type {Dataset} from './wallet.ts';
 const fixture=():Dataset=>{const dates=Array.from({length:55},(_,i)=>new Date(Date.UTC(2026,0,i+1)).toISOString().slice(0,10));return {dates,assets:{AAPL:{bars:dates.map(date=>({date,open:'100',high:'101',low:'99',close:'100',volume:'1'})),splits:[],checkedThrough:'2026-12-31'}},fx:Array.from({length:56},(_,i)=>({date:new Date(Date.UTC(2025,11,31+i)).toISOString().slice(0,10),usd:'2'}))};};
 const buy={id:'buy-test-0001',symbol:'AAPL',side:'buy' as const,amount:'10'};
+test('Varias ventas con pérdidas acumulan un resultado realizado negativo',()=>{const d=fixture(),s=newState('historical',d,'Pérdidas',0,0);queueOrder(s,d,buy);advance(s,d,d.dates[50]);d.assets.AAPL.bars[51].open='90';d.assets.AAPL.bars[52].open='90';for(const i of [51,52]){queueOrder(s,d,{id:'sell-loss-'+i,symbol:'AAPL',side:'sell',amount:'0.1'});advance(s,d,d.dates[i]);}assert.equal(s.realized,'-1.000000000000');assert.equal(s.cash,decimal(units('99')));});
 test('Compra fraccionada y venta parcial/total conservan saldos y coste base',()=>{
  const data=fixture(),state=newState('historical',data,'Prueba',0,0);queueOrder(state,data,buy);assert.equal(state.cash,decimal(100n*units('1')));assert.equal(valueState(state,data).availableCash,decimal(units('90')));
  advance(state,data,data.dates[50]);assert.equal(state.cash,decimal(units('90')));assert.equal(state.positions.AAPL.quantity,decimal(units('0.2')));assert.equal(valueState(state,data).equity,decimal(units('100')));

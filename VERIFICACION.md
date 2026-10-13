@@ -67,3 +67,17 @@ Referencia de respuestas estructuradas: https://docs.ollama.com/capabilities/str
 Limitaciones: la comparación automática y SPY aún no están construidas. La evolución de cartera es una tabla, sin gráfico. No se simulan dividendos ni impuestos. La consulta SPLITS detecta eventos comunicados por el proveedor, sin garantizar ausencia de retrasos o errores del proveedor; los saltos grandes constituyen una protección adicional conservadora. La conversión utiliza referencias del día anterior, no precios de cambio ejecutables.
 
 Fuente de desdoblamientos: https://www.alphavantage.co/documentation/#splits (consultada el 13 de octubre de 2026).
+
+## Cartera automática y SPY
+
+- Implementados compañeros vinculados a cada ejercicio: automática SMA20/50 en las cinco acciones, y referencia de compra/mantenimiento de SPY. Comparten capital inicial, fecha, conjunto de datos, divisas y costes con la manual.
+- Propuestas al cierre y ejecución en apertura siguiente; ventas primero, compras alfabéticas, presupuesto de nueva entrada hasta el 20 % del valor y limitado al efectivo libre. Sin aumentos de posiciones ni anticipación de cobros pendientes.
+- Activación idempotente; si se activa tarde, reproduce desde el inicio sin modificar la manual. Avances conjuntos en la misma transacción: los bloqueos revierten las tres carteras.
+- Pruebas detectaron y corrigieron un fallo al acumular múltiples ventas con pérdidas: el resultado realizado negativo ahora se conserva y acumula correctamente.
+- Compilación correcta y 28 pruebas automáticas correctas.
+- Ensayo real en «Demostración automática»: 49 avances, del 2026-08-03 al 2026-10-12. Manual sin operaciones: 100 EUR; automática: 101,235446275138 EUR, con 10 operaciones ejecutadas; referencia SPY: 105,089854480731 EUR, una compra ejecutada. Resultados por precio bajo costes del 0,1 % y empeoramiento del 0,1 %, sin dividendos ni impuestos. No se ajustó la estrategia para mejorar el resultado observado.
+- Comprobados CSV de automática y SPY. Seguimiento diario sin nueva sesión no avanza ni duplica órdenes.
+- Activada comparación para «Mi cartera» y «Mi cartera diaria», verificando que saldos, fechas y órdenes manuales permanezcan idénticos.
+- Navegador: revisados valores, gráfico, posiciones, contadores de operaciones y tabla desplegable de señales en el ejercicio de demostración. Al terminar se dejó seleccionado «Mi cartera», en su fecha original y con 100 EUR.
+
+El límite del 20 % se aplica al presupuesto de entrada al cierre; no limita permanentemente pesos de posiciones ni anticipa cómo variará el mercado. La IA no toma decisiones de operación. Los resultados de este tramo histórico no demuestran resultados futuros.

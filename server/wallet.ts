@@ -3,6 +3,7 @@ import type {DatabaseSync} from 'node:sqlite';
 import type {Bar} from './providers.ts';
 export const SCALE=1000000000000n;
 const BP=10000n;
+const signedUnits=(value:string)=>value.startsWith('-')?-units(value.slice(1)):units(value);
 export function units(value:string){if(typeof value!=='string'||!/^\d+(\.\d{1,12})?$/.test(value))throw new Error('Introduce un decimal positivo con un máximo de 12 cifras decimales.');const [w,f='']=value.split('.');return BigInt(w)*SCALE+BigInt(f.padEnd(12,'0'));}
 export function decimal(value:bigint){const sign=value<0n?'-':'';const n=value<0n?-value:value;return sign+(n/SCALE).toString()+'.'+(n%SCALE).toString().padStart(12,'0');}
 const ceil=(a:bigint,b:bigint)=>(a+b-1n)/b;
@@ -72,7 +73,7 @@ export function advance(state:State,data:Dataset,date:string){
     }else{
       const oldQuantity=units(previous.quantity);if(fill.quantity>oldQuantity)throw new Error('Cantidad insuficiente al ejecutar.');
       basis=fill.quantity===oldQuantity?units(previous.basis):units(previous.basis)*fill.quantity/oldQuantity;
-      state.cash=decimal(units(state.cash)+fill.cash);state.realized=decimal(units(state.realized)+fill.cash-basis);
+      state.cash=decimal(units(state.cash)+fill.cash);state.realized=decimal(signedUnits(state.realized)+fill.cash-basis);
       const remaining=oldQuantity-fill.quantity;if(remaining===0n)delete state.positions[order.symbol];else state.positions[order.symbol]={quantity:decimal(remaining),basis:decimal(units(previous.basis)-basis)};
     }
     order.status='executed';order.reason='Ejecutada en apertura de la sesión siguiente con costes simulados.';

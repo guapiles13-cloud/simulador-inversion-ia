@@ -1,4 +1,9 @@
 export const symbols = ['AAPL', 'MSFT', 'GOOGL', 'AMZN', 'IBM', 'SPY'];
+export function parseSplits(raw:unknown,symbol:string){
+  const value=raw as {symbol?:string;data?:{effective_date:string;split_factor:string}[]};
+  if(!value||value.symbol!==symbol||!Array.isArray(value.data)||!value.data.every(r=>/^\d{4}-\d{2}-\d{2}$/.test(r.effective_date)&&Number(r.split_factor)>0))throw new Error('No se pudieron verificar los desdoblamientos.');
+  return value.data.map(r=>r.effective_date).sort();
+}
 export type Bar = { date: string; open: string; high: string; low: string; close: string; volume: string };
 export function parseDaily(input: unknown): Bar[] {
   const payload = input as Record<string, unknown>;

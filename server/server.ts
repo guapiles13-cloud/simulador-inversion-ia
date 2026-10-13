@@ -2,8 +2,10 @@ import {createServer} from 'node:http';
 import {mkdirSync, readFileSync, existsSync} from 'node:fs';
 import {resolve, extname, sep} from 'node:path';
 import {DatabaseSync} from 'node:sqlite';
-import {symbols, parseDaily, parseFx, getJson} from './providers.ts';
+import {symbols, parseDaily, parseFx, getJson,parseSplits} from './providers.ts';
 import {alignSeries,analyze,requestComment,chartSeries} from './analysis.ts';
+import {initializeWalletDb,createWallet,readWallet,walletView,mutateWallet,queueOrder,advance} from './wallet.ts';
+import type {Dataset,State} from './wallet.ts';
 
 const root = resolve(import.meta.dirname, '..');
 mkdirSync(resolve(root,'data'),{recursive:true});
@@ -12,6 +14,20 @@ db.exec(`CREATE TABLE IF NOT EXISTS checks (name TEXT PRIMARY KEY, value TEXT NO
 CREATE TABLE IF NOT EXISTS snapshots (symbol TEXT PRIMARY KEY, source TEXT NOT NULL, fetched_at TEXT NOT NULL, payload TEXT NOT NULL);
 CREATE TABLE IF NOT EXISTS attempts (symbol TEXT NOT NULL, day TEXT NOT NULL, PRIMARY KEY(symbol,day));`);
 db.exec('CREATE TABLE IF NOT EXISTS explanations (id TEXT PRIMARY KEY, value TEXT NOT NULL)');
+db.exec('CREATE TABLE IF NOT EXISTS splits (symbol TEXT PRIMARY KEY, checked_day TEXT NOT NULL, dates TEXT NOT NULL)');
+initializeWalletDb(db);
+function walletDataset():Dataset{
+  const data=market();const fxRow=db.prepare("SELECT payload FROM snapshots WHERE symbol='BCE'").get() as {payload:string}|undefined;
+  if(data.count<51||!fxRow)throw new Error('Faltan precios o divisas para crear la cartera.');
+  return {dates:data.assets[0].bars.map((b:{date:string})=>b.date),fx:JSON.parse(fxRow.payload).rates,assets:Object.fromEntries(data.assets.map(a=>{const split=db.prepare('SELECT checked_day,dates FROM splits WHERE symbol=?').get(a.symbol) as {checked_day:string;dates:string}|undefined;return [a.symbol,{bars:a.bars,splits:split?JSON.parse(split.dates):[],checkedThrough:split?.checked_day||null}];}))};
+}
+function mergeDataset(old:Dataset,fresh:Dataset){
+  for(const symbol of symbols){const a=old.assets[symbol],b=fresh.assets[symbol];for(const row of b.bars){const prior=a.bars.find(p=>p.date===row.date);if(prior&&JSON.stringify(prior)!==JSON.stringify(row))throw new Error('El proveedor corrigió precios guardados. Se suspende la actualización para revisión.');}
+    a.bars=[...a.bars,...b.bars.filter(r=>!a.bars.some(p=>p.date===r.date))].sort((x,y)=>x.date.localeCompare(y.date));a.splits=[...new Set([...a.splits,...b.splits])].sort();a.checkedThrough=b.checkedThrough;}
+  old.dates=old.assets[symbols[0]].bars.map(b=>b.date).filter(d=>symbols.every(s=>old.assets[s].bars.some(b=>b.date===d))).sort();
+  for(const rate of fresh.fx){const prior=old.fx.find(r=>r.date===rate.date);if(prior&&prior.usd!==rate.usd)throw new Error('El BCE corrigió una referencia guardada. Se suspende la actualización para revisión.');if(!prior)old.fx.push(rate);}
+  old.fx.sort((a,b)=>a.date.localeCompare(b.date));
+}
 type Check = {ok: boolean; message: string; checkedAt?: string; count?: number; lastDate?: string};
 function save(name: string, value: Check) {db.prepare('INSERT OR REPLACE INTO checks VALUES (?,?)').run(name,JSON.stringify({...value,checkedAt:new Date().toISOString()}));}
 function checks(): Record<string,Check> {return Object.fromEntries((db.prepare('SELECT * FROM checks').all() as {name:string;value:string}[]).map(r=>[r.name,JSON.parse(r.value)]));}
@@ -52,6 +68,12 @@ async function diagnose() {
         save('BCE',{ok:true,message:'Referencias EUR/USD recibidas',count:rates.length,lastDate:rates.at(-1)!.date});
       } catch {save('BCE',{ok:false,message:'No se pudo comprobar el BCE. Se conservan las referencias anteriores.'});}
     }
+    if(key&&key!=='demo')for(const symbol of symbols){
+      const name='SPLITS:'+symbol;if(db.prepare('SELECT 1 FROM attempts WHERE symbol=? AND day=?').get(name,day()))continue;
+      db.prepare('INSERT INTO attempts VALUES (?,?)').run(name,day());
+      try{const raw=await getJson(`https://www.alphavantage.co/query?function=SPLITS&symbol=${symbol}&apikey=${encodeURIComponent(key)}`);const dates=parseSplits(raw,symbol);db.prepare('INSERT OR REPLACE INTO splits VALUES (?,?,?)').run(symbol,day(),JSON.stringify(dates));save(name,{ok:true,message:'Desdoblamientos verificados.'});}catch{save(name,{ok:false,message:'Desdoblamientos no verificados: operaciones bloqueadas hasta obtener estos datos.'});}
+      await new Promise(r=>setTimeout(r,1200));
+    }
     try {
       const tags=await getJson('http://127.0.0.1:11434/api/tags');
       const installed=tags.models?.map((m:{name:string})=>m.name)??[];
@@ -86,6 +108,35 @@ createServer(async(req,res)=>{
     if(url.pathname==='/api/status'&&req.method==='GET') {
       const results=checks();
       return json(200,{busy,keyConfigured:!!key&&key!=='demo',checks:results,ready:[...symbols,'BCE','ollama'].every(s=>results[s]?.ok)&&market().ready,stage:'viabilidad',symbols});
+    }
+    if(url.pathname==='/api/wallets'&&req.method==='GET'){
+      const rows=db.prepare('SELECT id,state FROM wallets ORDER BY created_at DESC,rowid DESC').all() as {id:string;state:string}[];
+      return json(200,{runs:rows.map(r=>{const s=JSON.parse(r.state) as State;return {id:s.id,label:s.label,mode:s.mode,date:s.cursor};})});
+    }
+    if(url.pathname==='/api/wallet'&&req.method==='GET'){
+      try{const {state,data}=readWallet(db,url.searchParams.get('id')||'');return json(200,walletView(state,data));}catch(e){return json(400,{error:(e as Error).message});}
+    }
+    if(url.pathname==='/api/wallet/export'&&req.method==='GET'){
+      try{const {state}=readWallet(db,url.searchParams.get('id')||'');const rows=[['id','activo','tipo','decision','estado','ejecucion','cantidad','apertura_usd','precio_simulado_usd','fecha_fx','usd_por_eur','bruto_eur','comision_eur','cargo_o_abono_eur','motivo'],...state.orders.map(o=>[o.id,o.symbol,o.side,o.decidedAt,o.status,o.execution?.date||'',o.execution?.quantity||'',o.execution?.openUsd||'',o.execution?.effectiveUsd||'',o.execution?.fxDate||'',o.execution?.fxUsd||'',o.execution?.grossEur||'',o.execution?.feeEur||'',o.execution?.cashEur||'',o.reason])];const csv='\uFEFF'+rows.map(row=>row.map(v=>'"'+(/^[=+@-]/.test(v)?"'":'')+v.replaceAll('"','""')+'"').join(';')).join('\r\n');res.writeHead(200,{'Content-Type':'text/csv; charset=utf-8','Content-Disposition':'attachment; filename="operaciones-virtuales.csv"'});return res.end(csv);}catch(e){return json(400,{error:(e as Error).message});}
+    }
+    if(req.method==='POST'&&(url.pathname==='/api/wallets'||url.pathname.startsWith('/api/wallet/'))){
+      let text='';for await(const chunk of req){text+=chunk.toString();if(text.length>4096)return json(413,{error:'Solicitud demasiado grande.'});}
+      try{
+        const input=JSON.parse(text);if(!input||typeof input!=='object'||Array.isArray(input))throw new Error('Solicitud inválida.');
+        if(url.pathname==='/api/wallets'){
+          if(!['historical','daily'].includes(input.mode)||typeof input.label!=='string'||input.label.trim().length<1||input.label.length>80)throw new Error('Modalidad o nombre no válidos.');
+          return json(201,createWallet(db,input.mode,walletDataset(),input.label.trim(),input.commissionBp??10,input.slippageBp??10));
+        }
+        if(typeof input.id!=='string')throw new Error('Falta la cartera.');
+        const result=mutateWallet(db,input.id,(state,data)=>{
+          if(input.date!==state.cursor)throw new Error('La sesión de la cartera ha cambiado. Actualiza antes de continuar.');
+          if(url.pathname==='/api/wallet/order')queueOrder(state,data,{id:input.orderId,symbol:input.symbol,side:input.side,amount:input.amount});
+          else if(url.pathname==='/api/wallet/cancel'){const order=state.orders.find(o=>o.id===input.orderId);if(!order||order.status!=='pending')throw new Error('Solo se pueden cancelar órdenes pendientes.');order.status='cancelled';order.reason='Cancelada manualmente; reserva liberada.';}
+          else if(url.pathname==='/api/wallet/advance'){if(state.mode!=='historical')throw new Error('El seguimiento diario solo avanza con datos nuevos.');const next=data.dates[data.dates.indexOf(state.cursor)+1];if(!next)throw new Error('Has llegado al final del histórico guardado.');advance(state,data,next);}
+          else if(url.pathname==='/api/wallet/sync'){if(state.mode!=='daily')throw new Error('La cartera histórica conserva su conjunto de datos.');mergeDataset(data,walletDataset());let next=data.dates[data.dates.indexOf(state.cursor)+1];while(next){advance(state,data,next);next=data.dates[data.dates.indexOf(state.cursor)+1];}}
+          else throw new Error('Acción no disponible.');
+        });return json(200,result);
+      }catch(e){return json(400,{error:(e as Error).message});}
     }
     if(url.pathname==='/api/sessions'&&req.method==='GET'){
       const data=market();return json(200,{dates:data.assets[0]?.bars.map((b:{date:string})=>b.date)||[],asOf:data.asOf,count:data.count});

@@ -2,7 +2,27 @@
 
 ## Estado real
 
-Pantalla de Mercado con gráficos, preparación de conexiones y análisis alineado. **Todavía no implementa carteras ni operaciones.** Calcula la regla educativa de medias de 20/50 sesiones, sin ejecutar operaciones. No hay datos inventados en los análisis de activos reales.
+Pantalla de Mercado con gráficos, preparación de conexiones, análisis alineado y **cartera manual con operaciones virtuales**. La regla 20/50 sigue siendo educativa: no ejecuta órdenes automáticas. Las carteras automáticas y de referencia quedan pendientes. No hay datos inventados en los ejercicios de activos reales.
+
+## Utilizar la cartera
+
+Entra en «Cartera virtual». Puedes crear ejercicios independientes con 100 EUR, elegir práctica histórica o seguimiento diario y conservar todos los ejercicios anteriores. Los costes de comisión y empeoramiento se fijan al crear cada ejercicio (por defecto 0,1 % cada uno; admiten 0–5 %, con dos decimales porcentuales).
+
+- Histórica: comienza en la sesión común número 50 y conserva una copia de los precios, divisas y verificaciones usados. «Avanzar una sesión» procesa la próxima apertura y actualiza el valor al cierre. No se puede rebobinar una cartera ni colocar una orden con una fecha arbitraria.
+- Diaria: comienza en la última sesión común disponible. «Incorporar datos guardados» combina nuevos registros con los originales y procesa sesiones posteriores; primero debes descargar los nuevos datos desde Preparación. Sin datos nuevos, las órdenes siguen pendientes. Las correcciones de datos ya usados suspenden la actualización para revisión.
+- Comprar: introduce un presupuesto TOTAL en euros, incluidos costes. Se reserva ese importe y se calcula la cantidad fraccionada al ejecutar con la apertura siguiente. No se conoce ni se muestra el precio futuro al enviar la orden.
+- Vender: introduce una cantidad de acciones/fracciones. «Vender todo lo disponible» utiliza la cantidad exacta conservada. Las acciones reservadas por otra venta no pueden venderse dos veces.
+- Cancelar: solo órdenes pendientes; libera la reserva y conserva el registro.
+
+El valor total es efectivo más posiciones valoradas al cierre. El coste base incluye comisiones de compra. La venta parcial asigna una parte proporcional de ese coste; el resultado realizado es el abono neto menos el coste asignado. El resultado pendiente de venta compara el valor actual con el coste restante, sin descontar una futura comisión de venta. Las cifras visibles se redondean; los saldos se conservan con 12 decimales mediante enteros de precisión arbitraria. Los cargos y comisiones se redondean hacia arriba en esa unidad mínima; los abonos y las fracciones, hacia abajo, para no gastar más del presupuesto.
+
+Los precios están en USD y el saldo en EUR. Para cada apertura y valoración se utiliza la última referencia BCE de un día ESTRICTAMENTE anterior a la sesión, nunca la publicada en esa fecha después de la apertura estadounidense. Si tiene más de siete días o falta, se bloquea el avance. Es una aproximación conservadora, no un cambio ofrecido por un intermediario.
+
+Los desdoblamientos se consultan con SPLITS, una solicitud por activo/día adicional a la de precios (hasta 12 consultas diarias entre ambas para este catálogo). La falta de verificación, un evento dentro del periodo ya recorrido o un salto apertura/cierre previo superior al 30 % bloquean operaciones. Si afecta a una posición existente se suspende el avance para evitar una valoración incorrecta. No se aplican dividendos, impuestos, intereses, apalancamiento ni operaciones reales.
+
+El historial muestra fechas de decisión y ejecución, apertura original, precio simulado, referencia de cambio y comisión. Se puede exportar CSV. La evolución del valor se muestra como tabla por sesión. No hay gráfico de rentabilidad de cartera todavía.
+
+Los ejercicios «Demostración verificada» y «Prueba de seguimiento diario» contienen comprobaciones identificadas. «Mi cartera» y «Mi cartera diaria» se preparan limpios con 100 EUR para tu uso. Puedes recuperar ejercicios anteriores desde el selector; crear otro no borra nada.
 
 ## Utilizar Mercado
 
@@ -72,8 +92,8 @@ La aplicación consulta los modelos locales y pide una explicación breve. Prueb
 
 1. Validar las conexiones con tu cuenta y revisar el rendimiento/respuesta de IA.
 2. Confirmar frescura y tratamiento de desdoblamientos de precios sin ajustar, y disponibilidad temporal de referencias BCE.
-3. Mercado y gráficos construidos; siguiente desarrollo: cartera y ejecución decimal.
-4. Añadir estrategia automática, referencia SPY y reproducción histórica sin datos futuros.
+3. Mercado, gráficos y cartera manual construidos, con compras/ventas y ejecución decimal.
+4. Añadir cartera automática y referencia SPY para comparar con las mismas fechas y costes.
 5. Integrar explicaciones sobre señales calculadas, exportaciones y documentación del curso.
 
 Condiciones acordadas: 100 EUR por cartera, fracciones, 0,1 % de comisión y 0,1 % de empeoramiento, ejecución en apertura siguiente, medias 20/50 y máximo 20 % por acción para nuevas posiciones automáticas. No habrá dividendos ni impuestos en v1.
@@ -89,4 +109,4 @@ Condiciones acordadas: 100 EUR por cartera, fracciones, 0,1 % de comisión y 0,1
 
 ## Verificación
 
-`npm test` incluye doce pruebas: lectura de proveedores, intersección de fechas, cortes históricos, señales, precisión decimal, rechazo de comentarios incoherentes e indicadores del gráfico. `npm run build` comprueba tipos y compila la interfaz. Las pruebas de operaciones se añadirán al implementar esos componentes.
+`npm test` incluye 21 pruebas: proveedores, fechas, indicadores, comentarios, operaciones, divisas, costes, reservas, bloqueos de desdoblamientos, persistencia y restauración. `npm run build` comprueba tipos y compila la interfaz. El ensayo de compra/venta con precios reales se conserva en el ejercicio identificado de demostración.

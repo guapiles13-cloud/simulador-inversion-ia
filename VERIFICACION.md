@@ -52,3 +52,18 @@ Referencia de respuestas estructuradas: https://docs.ollama.com/capabilities/str
 - Prueba HTTP de los seis activos en primera sesión (2026-05-21), sesión 50 (2026-08-03) y última (2026-10-12): sin puntos futuros e indicadores consistentes.
 - Navegador: probado cambio de Apple a Microsoft, corte de 50 sesiones, primera sesión sin medias, navegación a siguiente y última sesión, vuelta a Apple y comentario validado.
 - La vista usa datos guardados; no se han descargado nuevas cotizaciones para construir los gráficos. No se han probado carteras ni operaciones, todavía pendientes.
+
+## Cartera manual y operaciones virtuales
+
+- Implementados ejercicios históricos y diarios independientes, inicio con 100 EUR, fracciones, reservas, compras, ventas parciales/totales, cancelación, historial y CSV.
+- Precios históricos y costes quedan fijados por ejercicio; saldos y cantidades se guardan con 12 decimales y operaciones con enteros de precisión arbitraria. Órdenes y avances son transacciones SQLite; una petición duplicada no crea dos órdenes.
+- Verificadas las seis respuestas SPLITS de Alpha Vantage con la cuenta configurada. Las operaciones se bloquean si no hay verificación, si hay un desdoblamiento dentro del periodo recorrido o un salto sospechoso. La valoración/avance de posiciones afectadas también se suspende.
+- Compilación correcta y 21 pruebas automáticas correctas, incluyendo compra y venta parcial/total con cálculo manual, costes, reservas, duplicados, divisa anterior, imposibilidad de saltar sesiones, cancelación, bloqueo, rollback, persistencia y copia restaurada.
+- Ejercicio real «Demostración verificada»: compra AAPL por 20 EUR decidida el 2026-08-03, ejecutada el 2026-08-04; venta total decidida el 4, ejecutada el 5. Efectivo final 100,392118440306 EUR y resultado realizado 0,392118440306 EUR. Son operaciones virtuales bajo los costes del ejercicio, no prueba de rentabilidad futura.
+- Seguimiento diario: una compra pendiente permanece pendiente sin sesión nueva, y cancelarla restituye el saldo disponible. Creado un ejercicio diario limpio de 100 EUR separado de la prueba.
+- Verificada exportación CSV y lectura persistida de la cartera por HTTP.
+- Navegador: registrada una compra de 10 EUR en el ejercicio identificado de demostración, verificado saldo reservado de 10 EUR y liberación al cancelar. Creado «Mi cartera» desde la pantalla y comprobado saldo de 100 EUR, fecha inicial 2026-08-03 y cero órdenes. La prueba queda separada y accesible desde el selector.
+
+Limitaciones: la comparación automática y SPY aún no están construidas. La evolución de cartera es una tabla, sin gráfico. No se simulan dividendos ni impuestos. La consulta SPLITS detecta eventos comunicados por el proveedor, sin garantizar ausencia de retrasos o errores del proveedor; los saltos grandes constituyen una protección adicional conservadora. La conversión utiliza referencias del día anterior, no precios de cambio ejecutables.
+
+Fuente de desdoblamientos: https://www.alphavantage.co/documentation/#splits (consultada el 13 de octubre de 2026).

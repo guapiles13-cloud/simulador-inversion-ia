@@ -43,3 +43,12 @@ Etapa 1 preparada; conexiones de la etapa 2 verificadas. Antes de integrar la IA
 La mejora garantiza las restricciones del texto mostrado, no la exactitud de respuestas financieras libres del modelo. No hay carteras ni operaciones todavía; el tratamiento completo de acciones corporativas y las conversiones de las futuras operaciones siguen pendientes.
 
 Referencia de respuestas estructuradas: https://docs.ollama.com/capabilities/structured-outputs (consultada el 13 de octubre de 2026).
+
+## Pantalla de Mercado
+
+- Gráfico de cierres y medias 20/50, selector de seis activos, fechas comunes, navegación por sesiones, variación respecto al cierre anterior y tabla de los datos utilizados.
+- GET /api/sessions devuelve solo fechas disponibles; GET /api/market incluye los puntos del gráfico calculados con el corte elegido.
+- Compilación correcta y doce pruebas automáticas correctas. Las medias del gráfico final coinciden con el análisis; no aparecen antes de tener sus respectivas ventanas.
+- Prueba HTTP de los seis activos en primera sesión (2026-05-21), sesión 50 (2026-08-03) y última (2026-10-12): sin puntos futuros e indicadores consistentes.
+- Navegador: probado cambio de Apple a Microsoft, corte de 50 sesiones, primera sesión sin medias, navegación a siguiente y última sesión, vuelta a Apple y comentario validado.
+- La vista usa datos guardados; no se han descargado nuevas cotizaciones para construir los gráficos. No se han probado carteras ni operaciones, todavía pendientes.

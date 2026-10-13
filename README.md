@@ -2,7 +2,15 @@
 
 ## Estado real
 
-Preparación, comprobador de viabilidad y panel de análisis alineado. **Todavía no implementa carteras, operaciones ni gráficos.** Calcula la regla educativa de medias de 20/50 sesiones, sin ejecutar operaciones. No hay datos inventados en los análisis de activos reales.
+Pantalla de Mercado con gráficos, preparación de conexiones y análisis alineado. **Todavía no implementa carteras ni operaciones.** Calcula la regla educativa de medias de 20/50 sesiones, sin ejecutar operaciones. No hay datos inventados en los análisis de activos reales.
+
+## Utilizar Mercado
+
+La pantalla inicial es Mercado. Selecciona uno de los seis activos y una sesión de análisis. Los botones Anterior, Siguiente y Última sesión permiten recorrer el histórico disponible. La app pide al servidor únicamente cierres hasta la fecha elegida; al cambiar de fecha retira los datos anteriores mientras carga para evitar mostrar información posterior al nuevo corte.
+
+El gráfico representa cierres en verde, media de 20 sesiones en dorado y media de 50 en azul. Las medias aparecen desde las sesiones 20 y 50 respectivamente. El puntero o el control accesible «Explorar puntos del gráfico» permiten consultar cada valor. La variación porcentual es respecto al cierre de la sesión previa, no la rentabilidad de una cartera. Las cifras del gráfico usan números aproximados solo para dibujar; los indicadores del servidor conservan la precisión decimal definida.
+
+«Ver cierres y medias utilizados» muestra la tabla completa hasta el corte. «Consultar comentario de IA» utiliza el mismo activo y fecha del gráfico. El comentario se borra al cambiar activo o fecha. «Preparación y conexiones» conserva los controles de diagnóstico. La vista de Mercado no provoca nuevas descargas externas: utiliza los registros almacenados. Para incorporar nuevos datos vuelve a Preparación y comprueba las conexiones cuando el límite diario permita una descarga.
 
 Node 24 y Git están disponibles. La clave personal está configurada, las seis series reales han sido validadas y Ollama responde con llama3.2:3b. Las respuestas libres del modelo pueden contener errores. El panel nuevo usa una respuesta estructurada, comprueba que coincida con los cálculos y muestra únicamente frases revisadas. Consulta VERIFICACION.md para resultados y límites.
 
@@ -64,7 +72,7 @@ La aplicación consulta los modelos locales y pide una explicación breve. Prueb
 
 1. Validar las conexiones con tu cuenta y revisar el rendimiento/respuesta de IA.
 2. Confirmar frescura y tratamiento de desdoblamientos de precios sin ajustar, y disponibilidad temporal de referencias BCE.
-3. Construir mercado y gráficos; después cartera y ejecución decimal.
+3. Mercado y gráficos construidos; siguiente desarrollo: cartera y ejecución decimal.
 4. Añadir estrategia automática, referencia SPY y reproducción histórica sin datos futuros.
 5. Integrar explicaciones sobre señales calculadas, exportaciones y documentación del curso.
 
@@ -81,4 +89,4 @@ Condiciones acordadas: 100 EUR por cartera, fracciones, 0,1 % de comisión y 0,1
 
 ## Verificación
 
-`npm test` incluye diez pruebas: lectura de proveedores, intersección de fechas, cortes históricos, señales, precisión decimal y rechazo de comentarios incoherentes. `npm run build` comprueba tipos y compila la interfaz. Las pruebas de operaciones se añadirán al implementar esos componentes.
+`npm test` incluye doce pruebas: lectura de proveedores, intersección de fechas, cortes históricos, señales, precisión decimal, rechazo de comentarios incoherentes e indicadores del gráfico. `npm run build` comprueba tipos y compila la interfaz. Las pruebas de operaciones se añadirán al implementar esos componentes.

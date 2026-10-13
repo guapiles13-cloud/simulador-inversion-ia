@@ -3,7 +3,7 @@ import {mkdirSync, readFileSync, existsSync} from 'node:fs';
 import {resolve, extname, sep} from 'node:path';
 import {DatabaseSync} from 'node:sqlite';
 import {symbols, parseDaily, parseFx, getJson} from './providers.ts';
-import {alignSeries,analyze,requestComment} from './analysis.ts';
+import {alignSeries,analyze,requestComment,chartSeries} from './analysis.ts';
 
 const root = resolve(import.meta.dirname, '..');
 mkdirSync(resolve(root,'data'),{recursive:true});
@@ -21,7 +21,7 @@ let explaining = false;
 function market(asOf?:string){
   const stored=(db.prepare("SELECT symbol,payload FROM snapshots WHERE symbol<>'BCE'").all() as {symbol:string;payload:string}[]).map(r=>({symbol:r.symbol,bars:JSON.parse(r.payload).bars}));
   const aligned=alignSeries(stored,symbols,asOf);
-  return {asOf:aligned.asOf,count:aligned.count,ready:aligned.ready,assets:aligned.series.map(s=>({symbol:s.symbol,originalLastDate:stored.find(r=>r.symbol===s.symbol)?.bars.filter((b:{date:string})=>!asOf||b.date<=asOf).at(-1)?.date||null,excludedCount:aligned.excluded.find(r=>r.symbol===s.symbol)!.dates.filter(d=>!asOf||d<=asOf).length,analysis:analyze(s.symbol,s.bars),bars:s.bars}))};
+  return {asOf:aligned.asOf,count:aligned.count,ready:aligned.ready,assets:aligned.series.map(s=>({symbol:s.symbol,originalLastDate:stored.find(r=>r.symbol===s.symbol)?.bars.filter((b:{date:string})=>!asOf||b.date<=asOf).at(-1)?.date||null,excludedCount:aligned.excluded.find(r=>r.symbol===s.symbol)!.dates.filter(d=>!asOf||d<=asOf).length,analysis:analyze(s.symbol,s.bars),bars:s.bars,chart:chartSeries(s.bars)}))};
 }
 const day = ()=>new Date().toLocaleDateString('en-CA',{timeZone:'Europe/Madrid'});
 async function diagnose() {
@@ -86,6 +86,9 @@ createServer(async(req,res)=>{
     if(url.pathname==='/api/status'&&req.method==='GET') {
       const results=checks();
       return json(200,{busy,keyConfigured:!!key&&key!=='demo',checks:results,ready:[...symbols,'BCE','ollama'].every(s=>results[s]?.ok)&&market().ready,stage:'viabilidad',symbols});
+    }
+    if(url.pathname==='/api/sessions'&&req.method==='GET'){
+      const data=market();return json(200,{dates:data.assets[0]?.bars.map((b:{date:string})=>b.date)||[],asOf:data.asOf,count:data.count});
     }
     if(url.pathname==='/api/market'&&req.method==='GET'){
       const asOf=url.searchParams.get('asOf')||undefined;

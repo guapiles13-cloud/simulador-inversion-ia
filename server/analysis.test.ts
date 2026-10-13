@@ -1,8 +1,15 @@
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
-import {alignSeries,analyze,validateComment} from './analysis.ts';
+import {alignSeries,analyze,validateComment,chartSeries} from './analysis.ts';
 import type {Bar} from './providers.ts';
 const bars=(closes:string[]):Bar[]=>closes.map((close,i)=>({date:new Date(Date.UTC(2026,0,i+1)).toISOString().slice(0,10),open:close,close,high:close,low:close,volume:'1'}));
+test('El gráfico inicia SMA20 en sesión 20 y SMA50 en 50, sin puntos futuros',()=>{
+  const data=bars(Array.from({length:60},(_,i)=>String(i+1)));const points=chartSeries(data,data[49].date);
+  assert.equal(points.length,50);assert.equal(points[18].sma20,null);assert.equal(points[19].sma20,'10.500000');assert.equal(points[48].sma50,null);assert.equal(points[49].sma50,'25.500000');assert.equal(points[49].sma20,'40.500000');
+});
+test('Las medias del gráfico final coinciden con el análisis',()=>{
+  const data=bars(Array.from({length:65},(_,i)=>String(10+i/10)));const point=chartSeries(data).at(-1)!;const analysis=analyze('x',data);assert.equal(point.sma20,analysis.sma20);assert.equal(point.sma50,analysis.sma50);
+});
 test('Alinea por intersección, excluye huecos y fechas futuras sin rellenar',()=>{
   const a=bars(Array(52).fill('10'));const b=a.slice(0,51).filter((_,i)=>i!==10);
   const result=alignSeries([{symbol:'a',bars:a},{symbol:'b',bars:b}],['a','b'],a[49].date);

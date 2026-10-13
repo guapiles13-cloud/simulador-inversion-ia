@@ -11,6 +11,17 @@ export function alignSeries(series:Series[],required:string[],asOf?:string) {
     excluded:required.map((symbol,i)=>({symbol,dates:lists[i].filter(b=>!selected.has(b.date)).map(b=>b.date)}))};
 }
 export type Signal='COMPRA'|'VENTA'|'MANTENER'|'SIN_DATOS';
+export function average(closes:string[]):string|null{
+  if(!closes.length)return null;
+  const digits=Math.max(...closes.map(v=>v.split('.')[1]?.length||0));const scale=10n**BigInt(digits);
+  const sum=closes.reduce((total,v)=>{const [whole,fraction='']=v.split('.');return total+BigInt(whole)*scale+BigInt(fraction.padEnd(digits,'0')||'0');},0n);
+  const result=sum*1000000n/(BigInt(closes.length)*scale);
+  return `${result/1000000n}.${(result%1000000n).toString().padStart(6,'0')}`;
+}
+export function chartSeries(bars:Bar[],asOf?:string){
+  const visible=bars.filter(b=>!asOf||b.date<=asOf).sort((a,b)=>a.date.localeCompare(b.date));
+  return visible.map((b,i)=>({date:b.date,close:b.close,sma20:i>=19?average(visible.slice(i-19,i+1).map(r=>r.close)):null,sma50:i>=49?average(visible.slice(i-49,i+1).map(r=>r.close)):null}));
+}
 export type Analysis={symbol:string;date:string|null;count:number;sma20:string|null;sma50:string|null;signal:Signal;comparison:'mayor'|'menor'|'igual'|'insuficiente';explanation:string;version:string};
 export function analyze(symbol:string,bars:Bar[],asOf?:string):Analysis {
   const available=bars.filter(b=>!asOf||b.date<=asOf).sort((a,b)=>a.date.localeCompare(b.date));

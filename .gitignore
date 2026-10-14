@@ -4,3 +4,8 @@ dist/
 data/
 *.log
 work/
+tmp/
+# Borradores de entrega y evidencias conversacionales se conservan localmente.
+docs/DOCUMENTACION_TECNICA.md
+docs/HISTORIAL_PROMPTS.md
+docs/ENTREGA_CURSO.md

@@ -24,7 +24,7 @@ SPY recibe una orden de compra por el presupuesto de 100 EUR al inicio y mantien
 
 El panel muestra el valor de las tres carteras, un gráfico en euros, posiciones, órdenes pendientes/ejecutadas y cada señal/propuesta con sus medias y razones. Las órdenes y las propuestas están separadas: una propuesta no prueba una ejecución. Hay CSV de automática y SPY mediante los enlaces del panel. No se puede modificar manualmente ninguna de las dos carteras vinculadas.
 
-«Mi cartera» y «Mi cartera diaria» tienen ya la comparación activada y mantienen sus 100 EUR originales y cero órdenes manuales. «Demostración automática» contiene la prueba histórica completa en un ejercicio separado.
+«Demostración automática» contiene un ensayo histórico completo separado. Los ejercicios del usuario conservan sus propias operaciones; sus saldos y fechas cambian al utilizarlos.
 
 ## Utilizar la cartera
 
@@ -46,7 +46,7 @@ Los desdoblamientos se consultan con SPLITS, una solicitud por activo/día adici
 
 El historial muestra fechas de decisión y ejecución, apertura original, precio simulado, referencia de cambio y comisión. Se puede exportar CSV. La evolución del valor se muestra como tabla por sesión y, al activar la comparación, como gráfico conjunto en euros.
 
-Los ejercicios «Demostración verificada» y «Prueba de seguimiento diario» contienen comprobaciones identificadas. «Mi cartera» y «Mi cartera diaria» se preparan limpios con 100 EUR para tu uso. Puedes recuperar ejercicios anteriores desde el selector; crear otro no borra nada.
+Los ejercicios de demostración contienen comprobaciones identificadas. Cada nuevo ejercicio empieza con 100 EUR; crear otro conserva los anteriores. Puedes recuperar ejercicios retirados desde el control correspondiente.
 
 ## Utilizar Mercado
 
@@ -82,7 +82,7 @@ npm run build
 npm start
 ```
 
-Abre http://127.0.0.1:4318. El servidor acepta exclusivamente conexiones locales. La pantalla muestra los requisitos pendientes, permite comprobarlos y conserva los resultados en SQLite.
+Abre http://127.0.0.1:4318. En su modo predeterminado el servidor acepta conexiones locales; el modo alojado se configura por separado. La pantalla muestra los requisitos pendientes, permite comprobarlos y conserva los resultados en SQLite.
 
 También puedes usar `Iniciar.ps1`, que busca Node instalado o el runtime ya disponible de Codex y utiliza la copia local de npm en work si no está instalado. No instala herramientas del sistema. Desde PowerShell: `powershell -ExecutionPolicy Bypass -File .\Iniciar.ps1`. Se utiliza el puerto 4318 tanto en el acceso como en la configuración y el valor por defecto del servidor.
 
@@ -94,7 +94,7 @@ También puedes usar `Iniciar.ps1`, que busca Node instalado o el runtime ya dis
 
 Consulta TIME_SERIES_DAILY compact para los seis símbolos. Conserva el JSON original, los precios como cadenas decimales, procedencia y fecha de descarga. Una solicitud por símbolo y día de Madrid, incluso si falla; así reiniciar o pulsar repetidamente no consume nuevas consultas. Un intento fallido se vuelve a intentar al día siguiente. Los datos anteriores se conservan. La clave demo no demuestra acceso personal y se rechaza.
 
-La prueba exige 51 sesiones por símbolo y coherencia de apertura, máximo, mínimo y cierre. No certifica aún frescura, derechos de redistribución ni acciones corporativas. Deben comprobarse antes del simulador. El diagnóstico no exporta los datos de mercado.
+La prueba exige 51 sesiones por símbolo y coherencia de apertura, máximo, mínimo y cierre. No certifica frescura ni derechos de redistribución. Los desdoblamientos se consultan por separado y bloquean operaciones hasta disponer de la verificación necesaria; antes del despliegue debe confirmarse el permiso de exhibición de datos. El diagnóstico no exporta los datos de mercado.
 
 ## Preparar Ollama
 
@@ -114,7 +114,9 @@ La aplicación consulta los modelos locales y pide una explicación breve. Prueb
 
 ## Datos y copias
 
-`data/simulador.sqlite` contiene verificaciones y respuestas; `.env` contiene la clave. Ambos están excluidos de Git. Para una copia de seguridad manual, cierra la aplicación y copia toda la carpeta `data`. Para restaurar, cierra la aplicación y reemplaza `data` con tu copia. No existe aún un botón de copia. Las pruebas automatizadas validan la restauración de una base de prueba con carteras; no se ha sustituido tu base personal para hacer ese ensayo.
+`data/simulador.sqlite` contiene mercado, comprobaciones, ejercicios y comparaciones; `.env` contiene la clave. Ambos están excluidos de Git. Ejecuta `node scripts/backup-db.mjs` para crear una copia consistente mediante SQLite en `data/backups`, abrirla por separado y comprobar integridad y recuentos. No modifica los ejercicios originales. Respeta DATA_DIR si está configurado. Las copias contienen los ejercicios privados y no se suben a GitHub.
+
+Para restaurar una copia, cierra el servidor y conserva primero el directorio de datos actual completo. Utiliza una carpeta de datos nueva con la copia renombrada como `simulador.sqlite`; no mezcles una copia restaurada con archivos WAL/SHM de otra base. La configuración y los modelos se conservan por separado. No hay un botón de restauración. Las pruebas automatizadas y el ensayo de copia validan bases independientes; no se ha sustituido tu base personal.
 
 ## Próximas etapas
 
@@ -137,7 +139,7 @@ Condiciones acordadas: 100 EUR por cartera, fracciones, 0,1 % de comisión y 0,1
 
 ## Verificación
 
-`npm test` incluye 30 pruebas: proveedores, fechas, indicadores, comentarios, operaciones, divisas, costes, reservas, bloqueos, persistencia, restauración, retirada de ejercicios y comparación automática. Incluye múltiples ventas con pérdidas, invariancia ante cambios en datos futuros, activación repetida/tardía, compras limitadas y ausencia de aumentos diarios de posiciones. `npm run build` comprueba tipos y compila la interfaz.
+`npm test` incluye 34 pruebas: proveedores, fechas, indicadores, comentarios, operaciones, divisas, costes, reservas, bloqueos, persistencia, restauración, retirada de ejercicios y comparación automática. Incluye múltiples ventas con pérdidas, invariancia ante cambios en datos futuros, activación repetida/tardía, compras limitadas y ausencia de aumentos diarios de posiciones. `npm run build` comprueba tipos y compila la interfaz.
 
 ## Ayuda dentro de la aplicación
 

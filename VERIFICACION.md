@@ -110,3 +110,11 @@ El límite del 20 % se aplica al presupuesto de entrada al cierre; no limita per
 - Añadidos Dockerfile y exclusión de archivos privados del contexto; Docker no está instalado, por lo que la imagen aún no se ha construido.
 - Compilación correcta y 34 pruebas correctas. Prueba HTTP en proceso separado y base vacía: salud 200, carteras sin credenciales 401, carteras autenticadas 200, interfaz autenticada 200 y acción desde otro origen 403. El servidor de prueba se cierra; los ejercicios personales no se modifican.
 - GitHub conectado; no hay remoto del proyecto. Pendientes alojamiento, autorización para compartir cotizaciones del proveedor, prueba de Ollama alojado y URL final. Ningún servicio de pago contratado ni cotización publicada.
+
+## Preparación de la entrega y copia de seguridad · 14/10/2026
+
+- Red y plantilla de Oracle creadas por el participante y comprobadas en capturas. Ampere A1 devolvió Out of capacity en Madrid AD-1; la plantilla se guardó sin Apply. No hay servidor ni URL pública.
+- Preparados localmente documento técnico, registro de 36 instrucciones recuperadas de la sesión original y guion de vídeo de 4 minutos y 30 segundos. Historial con plan completo, sin metadatos de navegador, imágenes de cuentas ni correos personales. Borradores y enlaces privados de trabajo excluidos de Git.
+- Carpeta y dos Google Docs creados. La inserción de contenido fue rechazada por revisión automática al exigir autorización explícita para ese contenido y destino; los Docs permanecen vacíos dentro de la carpeta y no se han cambiado permisos públicos.
+- Compilación correcta y 34 pruebas correctas. Revisados 42 archivos versionados: sin .env, claves SSH, directorios privados ni la clave configurada dentro de sus contenidos.
+- Añadido script de copia SQLite. Copia real abierta de forma independiente: integrity_check=ok, siete ejercicios, tres comparaciones, dos ejercicios retirados y siete conjuntos de datos. No se sustituyó ni modificó la base personal.

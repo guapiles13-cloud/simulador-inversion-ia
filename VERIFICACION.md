@@ -81,3 +81,17 @@ Fuente de desdoblamientos: https://www.alphavantage.co/documentation/#splits (co
 - Navegador: revisados valores, gráfico, posiciones, contadores de operaciones y tabla desplegable de señales en el ejercicio de demostración. Al terminar se dejó seleccionado «Mi cartera», en su fecha original y con 100 EUR.
 
 El límite del 20 % se aplica al presupuesto de entrada al cierre; no limita permanentemente pesos de posiciones ni anticipa cómo variará el mercado. La IA no toma decisiones de operación. Los resultados de este tramo histórico no demuestran resultados futuros.
+
+## Recuperación y arranque, 14 de octubre de 2026
+
+- La nueva carpeta de proyecto estaba vacía y el servidor del puerto 4318 no estaba en marcha. Recuperados código, versiones Git, configuración privada, datos, modelos, compilación y dependencias desde la carpeta original. El original se conserva.
+- Puerto unificado a 4318 en la configuración, plantilla, servidor y acceso de inicio. Añadido Abrir aplicacion.cmd y corregido Iniciar.ps1 para localizar Node/npm, compilar, iniciar el servidor y mantener vivo su proceso mediante una ventana que puede minimizarse.
+- Probado el arranque con Windows PowerShell 5.1 y la compilación. Una segunda ejecución reutilizó el servidor ya existente correctamente.
+- Verificado HTTP 200, cinco ejercicios guardados y Mi cartera histórica con 100 EUR, cero órdenes manuales y comparación automática conservada.
+- El servidor local requiere estar iniciado; después de reiniciar el ordenador se utiliza el acceso de inicio.
+
+## Limpieza reversible de ejercicios
+
+- Añadidos «Quitar ejercicio», aviso con nombre del ejercicio y «Ejercicios retirados» con recuperación.
+- Se conserva el estado, conjunto de datos y comparación; las acciones de operar/avanzar se rechazan mientras el ejercicio está retirado.
+- Compilación correcta y 30 pruebas correctas. Ensayo HTTP con un ejercicio técnico: retirado del selector, recuperación con estado exactamente idéntico y nuevo retiro de la prueba. No se han retirado ejercicios del usuario.

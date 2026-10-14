@@ -7,6 +7,7 @@ import {alignSeries,analyze,requestComment,chartSeries} from './analysis.ts';
 import {initializeWalletDb,createWallet,readWallet,walletView,mutateWallet,queueOrder,advance} from './wallet.ts';
 import type {Dataset,State} from './wallet.ts';
 import {initializeComparisonDb,enableComparison,advanceCompared,comparisonView} from './comparison.ts';
+import {initializeArchiveDb,isArchived,setArchived,listExercises} from './archive.ts';
 
 const root = resolve(import.meta.dirname, '..');
 mkdirSync(resolve(root,'data'),{recursive:true});
@@ -18,6 +19,7 @@ db.exec('CREATE TABLE IF NOT EXISTS explanations (id TEXT PRIMARY KEY, value TEX
 db.exec('CREATE TABLE IF NOT EXISTS splits (symbol TEXT PRIMARY KEY, checked_day TEXT NOT NULL, dates TEXT NOT NULL)');
 initializeWalletDb(db);
 initializeComparisonDb(db);
+initializeArchiveDb(db);
 function walletDataset():Dataset{
   const data=market();const fxRow=db.prepare("SELECT payload FROM snapshots WHERE symbol='BCE'").get() as {payload:string}|undefined;
   if(data.count<51||!fxRow)throw new Error('Faltan precios o divisas para crear la cartera.');
@@ -96,7 +98,7 @@ async function diagnose() {
     } catch {save('ollama',{ok:false,message:'No se validó una respuesta de IA local: comprueba servicio, modelo, rendimiento o concordancia con los datos. La explicación calculada sigue disponible.'});}
   } finally {busy=false;}
 }
-const port=Number(process.env.PORT || 4317);
+const port=Number(process.env.PORT || 4318);
 if(!Number.isInteger(port)||port<1024||port>65535) throw new Error('Puerto inválido');
 const origin=`http://127.0.0.1:${port}`;
 createServer(async(req,res)=>{
@@ -112,8 +114,7 @@ createServer(async(req,res)=>{
       return json(200,{busy,keyConfigured:!!key&&key!=='demo',checks:results,ready:[...symbols,'BCE','ollama'].every(s=>results[s]?.ok)&&market().ready,stage:'viabilidad',symbols});
     }
     if(url.pathname==='/api/wallets'&&req.method==='GET'){
-      const rows=db.prepare('SELECT id,state FROM wallets ORDER BY created_at DESC,rowid DESC').all() as {id:string;state:string}[];
-      return json(200,{runs:rows.map(r=>{const s=JSON.parse(r.state) as State;return {id:s.id,label:s.label,mode:s.mode,date:s.cursor};})});
+      return json(200,listExercises(db));
     }
     if(url.pathname==='/api/wallet'&&req.method==='GET'){
       try{const {state,data}=readWallet(db,url.searchParams.get('id')||'');return json(200,{...walletView(state,data),comparison:comparisonView(db,state.id)});}catch(e){return json(400,{error:(e as Error).message});}
@@ -130,6 +131,8 @@ createServer(async(req,res)=>{
           return json(201,createWallet(db,input.mode,walletDataset(),input.label.trim(),input.commissionBp??10,input.slippageBp??10));
         }
         if(typeof input.id!=='string')throw new Error('Falta la cartera.');
+        if(url.pathname==='/api/wallet/archive'||url.pathname==='/api/wallet/restore'){setArchived(db,input.id,url.pathname.endsWith('/archive'));return json(200,listExercises(db));}
+        if(isArchived(db,input.id))throw new Error('Este ejercicio está guardado fuera de la lista. Recupéralo antes de operar o avanzar.');
         if(url.pathname==='/api/wallet/comparison/start'){enableComparison(db,input.id,input.date);const {state,data}=readWallet(db,input.id);return json(200,{...walletView(state,data),comparison:comparisonView(db,state.id)});}
         const result=mutateWallet(db,input.id,(state,data)=>{
           if(input.date!==state.cursor)throw new Error('La sesión de la cartera ha cambiado. Actualiza antes de continuar.');

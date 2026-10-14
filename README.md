@@ -28,6 +28,8 @@ El panel muestra el valor de las tres carteras, un gráfico en euros, posiciones
 
 ## Utilizar la cartera
 
+Para limpiar las pruebas, selecciona un ejercicio y pulsa **Quitar ejercicio**, justo debajo de los selectores. Revisa el nombre y confirma **Quitar de la lista**. Se oculta del selector sin perder saldo, órdenes, datos ni comparación automática. Mientras esté retirado no se puede avanzar ni operar. En **Ejercicios retirados**, pulsa **Recuperar** para volver a utilizarlo. No se elimina definitivamente ningún ejercicio.
+
 Entra en «Cartera virtual». Puedes crear ejercicios independientes con 100 EUR, elegir práctica histórica o seguimiento diario y conservar todos los ejercicios anteriores. Los costes de comisión y empeoramiento se fijan al crear cada ejercicio (por defecto 0,1 % cada uno; admiten 0–5 %, con dos decimales porcentuales).
 
 - Histórica: comienza en la sesión común número 50 y conserva una copia de los precios, divisas y verificaciones usados. «Avanzar una sesión» procesa la próxima apertura y actualiza el valor al cierre. No se puede rebobinar una cartera ni colocar una orden con una fecha arbitraria.
@@ -68,6 +70,10 @@ Interfaces locales: GET /api/market (opcional asOf=AAAA-MM-DD) devuelve solo ses
 
 ## Abrir
 
+En Windows, haz doble clic en **Abrir aplicacion.cmd** desde esta carpeta. Inicia el servidor y abre http://127.0.0.1:4318. Mantén la ventana de inicio abierta mientras pruebas la aplicación; puedes minimizarla. Si ya está encendida, el acceso reutiliza el servidor sin iniciar otro.
+
+Si reinicias el ordenador o cierras la ventana de inicio, vuelve a usar ese acceso. La dirección local necesita el servidor en marcha. Este proyecto está ahora en `C:\Eduardo\Proyectos\simulador de inversion`; se han recuperado los archivos, datos, modelos y versiones de la carpeta original sin borrar el original.
+
 Requiere Node.js 24 y npm. En la carpeta del proyecto:
 
 ```powershell
@@ -76,9 +82,9 @@ npm run build
 npm start
 ```
 
-Abre http://127.0.0.1:4317. El servidor acepta exclusivamente conexiones locales. La pantalla muestra los requisitos pendientes, permite comprobarlos y conserva los resultados en SQLite.
+Abre http://127.0.0.1:4318. El servidor acepta exclusivamente conexiones locales. La pantalla muestra los requisitos pendientes, permite comprobarlos y conserva los resultados en SQLite.
 
-Si trabajas dentro de Codex puedes usar `Iniciar.ps1`, que busca Node y npm instalados o el runtime ya disponible de Codex. No instala herramientas del sistema. Desde PowerShell: `powershell -ExecutionPolicy Bypass -File .\Iniciar.ps1`.
+También puedes usar `Iniciar.ps1`, que busca Node instalado o el runtime ya disponible de Codex y utiliza la copia local de npm en work si no está instalado. No instala herramientas del sistema. Desde PowerShell: `powershell -ExecutionPolicy Bypass -File .\Iniciar.ps1`. Se utiliza el puerto 4318 tanto en el acceso como en la configuración y el valor por defecto del servidor.
 
 ## Configurar cotizaciones
 

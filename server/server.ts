@@ -1,4 +1,5 @@
 import {createServer} from 'node:http';
+import {runtime,allowRequest,ollamaBaseUrl} from './runtime.ts';
 import {mkdirSync, readFileSync, existsSync} from 'node:fs';
 import {resolve, extname, sep} from 'node:path';
 import {DatabaseSync} from 'node:sqlite';
@@ -10,8 +11,9 @@ import {initializeComparisonDb,enableComparison,advanceCompared,comparisonView} 
 import {initializeArchiveDb,isArchived,setArchived,listExercises} from './archive.ts';
 
 const root = resolve(import.meta.dirname, '..');
-mkdirSync(resolve(root,'data'),{recursive:true});
-const db = new DatabaseSync(resolve(root,'data','simulador.sqlite'));
+const config=runtime(process.env,root);
+mkdirSync(config.dataDir,{recursive:true});
+const db = new DatabaseSync(resolve(config.dataDir,'simulador.sqlite'));
 db.exec(`CREATE TABLE IF NOT EXISTS checks (name TEXT PRIMARY KEY, value TEXT NOT NULL);
 CREATE TABLE IF NOT EXISTS snapshots (symbol TEXT PRIMARY KEY, source TEXT NOT NULL, fetched_at TEXT NOT NULL, payload TEXT NOT NULL);
 CREATE TABLE IF NOT EXISTS attempts (symbol TEXT NOT NULL, day TEXT NOT NULL, PRIMARY KEY(symbol,day));`);
@@ -79,7 +81,7 @@ async function diagnose() {
       await new Promise(r=>setTimeout(r,1200));
     }
     try {
-      const tags=await getJson('http://127.0.0.1:11434/api/tags');
+      const tags=await getJson(ollamaBaseUrl()+'/api/tags');
       const installed=tags.models?.map((m:{name:string})=>m.name)??[];
       const preferred=process.env.OLLAMA_MODEL || 'llama3.2:3b';
       const candidates=[...new Set([preferred,'llama3.2:1b'])].filter(m=>installed.includes(m));
@@ -98,17 +100,17 @@ async function diagnose() {
     } catch {save('ollama',{ok:false,message:'No se validó una respuesta de IA local: comprueba servicio, modelo, rendimiento o concordancia con los datos. La explicación calculada sigue disponible.'});}
   } finally {busy=false;}
 }
-const port=Number(process.env.PORT || 4318);
-if(!Number.isInteger(port)||port<1024||port>65535) throw new Error('Puerto inválido');
-const origin=`http://127.0.0.1:${port}`;
+const {port,origin}=config;
 createServer(async(req,res)=>{
   res.setHeader('X-Content-Type-Options','nosniff');
   res.setHeader('Cache-Control','no-store');
   const url=new URL(req.url || '/',origin);
   const json=(status:number,data:unknown)=>{res.writeHead(status,{'Content-Type':'application/json; charset=utf-8'});res.end(JSON.stringify(data));};
   try {
-    if(req.headers.host!==`127.0.0.1:${port}`) return json(403,{error:'Abre la dirección local indicada.'});
-    if(req.method==='POST'&&req.headers.origin!==origin) return json(403,{error:'Origen no permitido.'});
+    const access=allowRequest(req.headers,req.method,url.pathname,config);
+    if(access===401){res.setHeader('WWW-Authenticate','Basic realm="Simulador educativo", charset="UTF-8"');return json(401,{error:'Introduce las credenciales de prueba.'});}
+    if(access===403)return json(403,{error:'Host u origen no permitido.'});
+    if(url.pathname==='/api/health'&&req.method==='GET')return json(200,{service:'simulador-inversion-ia',ok:true});
     if(url.pathname==='/api/status'&&req.method==='GET') {
       const results=checks();
       return json(200,{busy,keyConfigured:!!key&&key!=='demo',checks:results,ready:[...symbols,'BCE','ollama'].every(s=>results[s]?.ok)&&market().ready,stage:'viabilidad',symbols});
@@ -182,8 +184,8 @@ createServer(async(req,res)=>{
     const mime:Record<string,string>={'.html':'text/html; charset=utf-8','.js':'text/javascript','.css':'text/css','.svg':'image/svg+xml'};
     res.writeHead(200,{'Content-Type':mime[extname(file)]||'application/octet-stream'});res.end(readFileSync(file));
   } catch {json(500,{error:'Error local. No se han expuesto credenciales.'});}
-}).listen(port,'127.0.0.1',()=>{
+}).listen(port,config.host,()=>{
   console.log(`Simulador de inversión IA: ${origin}`);
-  void diagnose().catch(()=>save('general',{ok:false,message:'Error en diagnóstico.'}));
+  if(config.autoChecks)void diagnose().catch(()=>save('general',{ok:false,message:'Error en diagnóstico.'}));
 });
-setInterval(()=>{void diagnose().catch(()=>save('general',{ok:false,message:'Error en diagnóstico.'}));},60*60*1000).unref();
+if(config.autoChecks)setInterval(()=>{void diagnose().catch(()=>save('general',{ok:false,message:'Error en diagnóstico.'}));},60*60*1000).unref();

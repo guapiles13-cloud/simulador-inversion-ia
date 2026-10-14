@@ -114,7 +114,7 @@ La aplicación consulta los modelos locales y pide una explicación breve. Prueb
 
 ## Datos y copias
 
-`data/simulador.sqlite` contiene verificaciones y respuestas; `.env` contiene la clave. Ambos están excluidos de Git. Para una copia de seguridad manual, cierra la aplicación y copia toda la carpeta `data`. Para restaurar, cierra la aplicación y reemplaza `data` con tu copia. No existe aún un botón de copia ni se ha validado una restauración de carteras, porque no hay carteras.
+`data/simulador.sqlite` contiene verificaciones y respuestas; `.env` contiene la clave. Ambos están excluidos de Git. Para una copia de seguridad manual, cierra la aplicación y copia toda la carpeta `data`. Para restaurar, cierra la aplicación y reemplaza `data` con tu copia. No existe aún un botón de copia. Las pruebas automatizadas validan la restauración de una base de prueba con carteras; no se ha sustituido tu base personal para hacer ese ensayo.
 
 ## Próximas etapas
 
@@ -142,3 +142,7 @@ Condiciones acordadas: 100 EUR por cartera, fracciones, 0,1 % de comisión y 0,1
 ## Ayuda dentro de la aplicación
 
 El menú «Cómo usar la app» ofrece una guía breve: crear y nombrar un ejercicio, registrar una orden, avanzar una sesión, consultar el historial y comparar carteras. Explica las modalidades histórica y diaria, los datos reales y las operaciones simuladas. «Pendiente» en conexiones significa que la última comprobación no fue válida o falta hacerla; no describe la situación bursátil de la empresa. Se conservan los datos anteriores. El historial se consulta dentro de Cartera virtual.
+
+## Preparación para alojamiento
+
+Consulta [docs/DESPLIEGUE.md](docs/DESPLIEGUE.md). El servidor conserva por defecto el acceso local. Para un alojamiento se han añadido origen HTTPS, credenciales de prueba, directorio persistente configurable y conexión configurable a Ollama. La imagen Docker no incorpora claves ni datos personales. Todavía no hay URL desplegada; quedan por resolver alojamiento, datos autorizados y disponibilidad de IA. La prueba HTTP aislada puede ejecutarse con `node scripts/check-hosting.mjs`; utiliza una base vacía en work y el puerto 4329, y cierra su servidor al acabar.

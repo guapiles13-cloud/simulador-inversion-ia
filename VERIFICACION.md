@@ -102,3 +102,11 @@ El límite del 20 % se aplica al presupuesto de entrada al cierre; no limita per
 - Aclarado el significado de Verificado/Pendiente en conexiones; retirado el enlace antiguo «Historial · Pendiente», pues el historial ya está en Cartera virtual.
 - Estado guardado revisado: Alphabet, Amazon, IBM y SPY tienen una consulta de precios no validada. El mensaje genérico no permite atribuir el fallo a una causa concreta; los datos anteriores siguen guardados.
 - Compilación y 30 pruebas correctas. Comprobada en navegador la guía, su enlace a cartera y el acceso a conexiones, sin crear órdenes ni modificar los ejercicios.
+
+## Preparación de alojamiento · 14/10/2026
+
+- Añadido modo alojado explícito con origen HTTPS, contraseña de prueba obligatoria, controles de Host/Origin y autenticación de páginas, datos, exportaciones y acciones. Se mantiene el modo local por defecto.
+- Directorio de datos y dirección privada de Ollama configurables. Endpoint de salud sin datos de mercado ni carteras. Diagnósticos automáticos desactivables para pruebas aisladas.
+- Añadidos Dockerfile y exclusión de archivos privados del contexto; Docker no está instalado, por lo que la imagen aún no se ha construido.
+- Compilación correcta y 34 pruebas correctas. Prueba HTTP en proceso separado y base vacía: salud 200, carteras sin credenciales 401, carteras autenticadas 200, interfaz autenticada 200 y acción desde otro origen 403. El servidor de prueba se cierra; los ejercicios personales no se modifican.
+- GitHub conectado; no hay remoto del proyecto. Pendientes alojamiento, autorización para compartir cotizaciones del proveedor, prueba de Ollama alojado y URL final. Ningún servicio de pago contratado ni cotización publicada.

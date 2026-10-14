@@ -1,4 +1,5 @@
 import type {Bar} from './providers.ts';
+import {ollamaBaseUrl} from './runtime.ts';
 export type Series = {symbol:string;bars:Bar[]};
 export function alignSeries(series:Series[],required:string[],asOf?:string) {
   if(asOf&&!/^\d{4}-\d{2}-\d{2}$/.test(asOf)) throw new Error('Fecha no válida.');
@@ -48,7 +49,7 @@ export async function requestComment(analysis:Analysis,model:string){
   const schema={type:'object',additionalProperties:false,properties:{signal:{type:'string',enum:['COMPRA','VENTA','MANTENER','SIN_DATOS']},comparison:{type:'string',enum:['mayor','menor','igual','insuficiente']},concept:{type:'string',enum:['promedio_cierres','datos_insuficientes']},risk:{type:'string',enum:['sin_garantia']}},required:['signal','comparison','concept','risk']};
   const expected={signal:analysis.signal,comparison:analysis.comparison,concept:analysis.signal==='SIN_DATOS'?'datos_insuficientes':'promedio_cierres',risk:'sin_garantia'};
   const start=Date.now();
-  const response=await fetch('http://127.0.0.1:11434/api/chat',{method:'POST',headers:{'Content-Type':'application/json'},signal:AbortSignal.timeout(45000),body:JSON.stringify({model,stream:false,format:schema,messages:[{role:'system',content:'Clasifica los datos de una explicación educativa. SMA20 es el promedio de 20 cierres y SMA50 de 50 cierres. No son índices. Usa solo las conclusiones calculadas recibidas. Devuelve únicamente JSON conforme al esquema: '+JSON.stringify(schema)},{role:'user',content:JSON.stringify({analysis,expected})}],options:{temperature:0,num_predict:140}})});
+  const response=await fetch(ollamaBaseUrl()+'/api/chat',{method:'POST',headers:{'Content-Type':'application/json'},signal:AbortSignal.timeout(45000),body:JSON.stringify({model,stream:false,format:schema,messages:[{role:'system',content:'Clasifica los datos de una explicación educativa. SMA20 es el promedio de 20 cierres y SMA50 de 50 cierres. No son índices. Usa solo las conclusiones calculadas recibidas. Devuelve únicamente JSON conforme al esquema: '+JSON.stringify(schema)},{role:'user',content:JSON.stringify({analysis,expected})}],options:{temperature:0,num_predict:140}})});
   if(!response.ok)throw new Error('Ollama no responde.');
   const result=await response.json();
   const text=validateComment(result.message?.content,analysis);

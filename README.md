@@ -137,4 +137,8 @@ Condiciones acordadas: 100 EUR por cartera, fracciones, 0,1 % de comisión y 0,1
 
 ## Verificación
 
-`npm test` incluye 28 pruebas: proveedores, fechas, indicadores, comentarios, operaciones, divisas, costes, reservas, bloqueos, persistencia, restauración y comparación automática. Incluye múltiples ventas con pérdidas, invariancia ante cambios en datos futuros, activación repetida/tardía, compras limitadas y ausencia de aumentos diarios de posiciones. `npm run build` comprueba tipos y compila la interfaz.
+`npm test` incluye 30 pruebas: proveedores, fechas, indicadores, comentarios, operaciones, divisas, costes, reservas, bloqueos, persistencia, restauración, retirada de ejercicios y comparación automática. Incluye múltiples ventas con pérdidas, invariancia ante cambios en datos futuros, activación repetida/tardía, compras limitadas y ausencia de aumentos diarios de posiciones. `npm run build` comprueba tipos y compila la interfaz.
+
+## Ayuda dentro de la aplicación
+
+El menú «Cómo usar la app» ofrece una guía breve: crear y nombrar un ejercicio, registrar una orden, avanzar una sesión, consultar el historial y comparar carteras. Explica las modalidades histórica y diaria, los datos reales y las operaciones simuladas. «Pendiente» en conexiones significa que la última comprobación no fue válida o falta hacerla; no describe la situación bursátil de la empresa. Se conservan los datos anteriores. El historial se consulta dentro de Cartera virtual.

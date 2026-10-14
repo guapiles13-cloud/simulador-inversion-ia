@@ -95,3 +95,10 @@ El límite del 20 % se aplica al presupuesto de entrada al cierre; no limita per
 - Añadidos «Quitar ejercicio», aviso con nombre del ejercicio y «Ejercicios retirados» con recuperación.
 - Se conserva el estado, conjunto de datos y comparación; las acciones de operar/avanzar se rechazan mientras el ejercicio está retirado.
 - Compilación correcta y 30 pruebas correctas. Ensayo HTTP con un ejercicio técnico: retirado del selector, recuperación con estado exactamente idéntico y nuevo retiro de la prueba. No se han retirado ejercicios del usuario.
+
+## Guía rápida de la aplicación · 14/10/2026
+
+- Añadida «Cómo usar la app» al menú de todas las pantallas y a la navegación móvil. Incluye inicio en cuatro pasos, funciones de las pantallas, modalidades, comparación y límites.
+- Aclarado el significado de Verificado/Pendiente en conexiones; retirado el enlace antiguo «Historial · Pendiente», pues el historial ya está en Cartera virtual.
+- Estado guardado revisado: Alphabet, Amazon, IBM y SPY tienen una consulta de precios no validada. El mensaje genérico no permite atribuir el fallo a una causa concreta; los datos anteriores siguen guardados.
+- Compilación y 30 pruebas correctas. Comprobada en navegador la guía, su enlace a cartera y el acceso a conexiones, sin crear órdenes ni modificar los ejercicios.

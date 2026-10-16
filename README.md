@@ -56,7 +56,7 @@ El gráfico representa cierres en verde, media de 20 sesiones en dorado y media 
 
 «Ver cierres y medias utilizados» muestra la tabla completa hasta el corte. «Consultar comentario de IA» utiliza el mismo activo y fecha del gráfico. El comentario se borra al cambiar activo o fecha. «Preparación y conexiones» conserva los controles de diagnóstico. La vista de Mercado no provoca nuevas descargas externas: utiliza los registros almacenados. Para incorporar nuevos datos vuelve a Preparación y comprueba las conexiones cuando el límite diario permita una descarga.
 
-Node 24 y Git están disponibles. La clave personal está configurada, las seis series reales han sido validadas y Ollama responde con llama3.2:3b. Las respuestas libres del modelo pueden contener errores. El panel nuevo usa una respuesta estructurada, comprueba que coincida con los cálculos y muestra únicamente frases revisadas. Consulta VERIFICACION.md para resultados y límites.
+Node 24 y Git están disponibles. La clave personal está configurada y las seis series reales han sido validadas. El modelo predeterminado es llama3.2:1b para reducir memoria; llama3.2:3b se conserva como alternativa local. Las respuestas libres del modelo pueden contener errores. El panel usa una respuesta estructurada, comprueba que coincida con los cálculos y muestra únicamente frases revisadas. Consulta VERIFICACION.md para resultados y límites.
 
 ## Fechas y explicaciones
 
@@ -101,16 +101,18 @@ La prueba exige 51 sesiones por símbolo y coherencia de apertura, máximo, mín
 Instala https://ollama.com/download/windows y ejecuta:
 
 ```powershell
-ollama pull llama3.2:3b
-```
-
-Si tu ordenador necesita un modelo menor:
-
-```powershell
 ollama pull llama3.2:1b
 ```
 
-La aplicación consulta los modelos locales y pide una explicación breve. Prueba primero 3b y después 1b si ya está descargado. El umbral provisional es 45 segundos; valida la clasificación y muestra frases revisadas. Una respuesta recibida no prueba todavía la fidelidad financiera del modelo. No se instala ni descarga Ollama automáticamente y no hay sustitución por servicios de pago.
+En `.env`, utiliza `OLLAMA_MODEL=llama3.2:1b`. Para volver al modelo mayor, descárgalo y cambia esa variable a `llama3.2:3b`:
+
+```powershell
+ollama pull llama3.2:3b
+```
+
+La aplicación usa el modelo configurado y pide una clasificación breve, con un contexto de 2048 tokens y un máximo de 140 tokens de salida. Libera el modelo de memoria tras cada respuesta (`keep_alive: 0`); una consulta nueva tendrá que cargarlo otra vez. La caché evita repetir explicaciones ya validadas. El umbral provisional es 45 segundos; valida la clasificación y muestra frases revisadas. Una respuesta recibida no prueba todavía la fidelidad financiera del modelo. No se instala ni descarga Ollama automáticamente y no hay sustitución por servicios de pago.
+
+Para comprobar la IA local con las seis series reales guardadas y un caso de datos insuficientes, ejecuta `node scripts/check-ai.mjs llama3.2:1b`. Lee SQLite sin modificarla, no consulta proveedores y deja el informe de tiempos y memoria comunicada por Ollama en `work/ai-1b.json`. Puedes repetirlo con `llama3.2:3b` para comparar en el mismo ordenador. La asignación del modelo no equivale a la RAM total de un servidor; el alojamiento requiere su propia prueba.
 
 ## Datos y copias
 

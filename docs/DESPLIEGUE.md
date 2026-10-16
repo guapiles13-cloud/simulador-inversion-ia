@@ -25,7 +25,7 @@ Variables del servidor (nunca en el cliente ni en Git):
 | REVIEW_PASSWORD | Contraseña de prueba aleatoria de al menos 24 caracteres |
 | ALPHA_VANTAGE_API_KEY | Clave privada, pendiente de resolver condiciones para la evaluación |
 | OLLAMA_BASE_URL | Dirección privada accesible de Ollama; por defecto localhost:11434 |
-| OLLAMA_MODEL | Modelo descargado, inicialmente llama3.2:3b |
+| OLLAMA_MODEL | Modelo descargado; por defecto llama3.2:1b para reducir memoria |
 | AUTO_CHECKS=false | Desactiva diagnósticos al arrancar y periódicos; el botón manual sigue disponible |
 
 La instancia de evaluación debe utilizar su propia base, sin copiar las carteras personales. El acceso de prueba es compartido: sus usuarios ven y modifican los mismos ejercicios; no existen cuentas independientes. Las credenciales no son una autorización del proveedor para compartir sus datos.

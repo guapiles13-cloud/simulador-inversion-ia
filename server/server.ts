@@ -83,7 +83,7 @@ async function diagnose() {
     try {
       const tags=await getJson(ollamaBaseUrl()+'/api/tags');
       const installed=tags.models?.map((m:{name:string})=>m.name)??[];
-      const preferred=process.env.OLLAMA_MODEL || 'llama3.2:3b';
+      const preferred=process.env.OLLAMA_MODEL || 'llama3.2:1b';
       const candidates=[...new Set([preferred,'llama3.2:1b'])].filter(m=>installed.includes(m));
       if (!candidates.length) throw new Error('No hay modelos');
       let passed=false;
@@ -160,7 +160,7 @@ createServer(async(req,res)=>{
       let input:{symbol?:string;asOf?:string};try{input=JSON.parse(body);}catch{return json(400,{error:'Solicitud no válida.'});}
       if(!input||!symbols.includes(input.symbol||'')||(input.asOf&&!/^\d{4}-\d{2}-\d{2}$/.test(input.asOf)))return json(400,{error:'Activo o fecha no válidos.'});
       const analysis=market(input.asOf).assets.find(a=>a.symbol===input.symbol)!.analysis;
-      const model=process.env.OLLAMA_MODEL||'llama3.2:3b';
+      const model=process.env.OLLAMA_MODEL||'llama3.2:1b';
       const cacheId=JSON.stringify({analysis,model});
       const cached=db.prepare('SELECT value FROM explanations WHERE id=?').get(cacheId) as {value:string}|undefined;
       if(cached)return json(200,JSON.parse(cached.value));

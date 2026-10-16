@@ -118,3 +118,13 @@ El límite del 20 % se aplica al presupuesto de entrada al cierre; no limita per
 - Carpeta y dos Google Docs creados. La inserción de contenido fue rechazada por revisión automática al exigir autorización explícita para ese contenido y destino; los Docs permanecen vacíos dentro de la carpeta y no se han cambiado permisos públicos.
 - Compilación correcta y 34 pruebas correctas. Revisados 42 archivos versionados: sin .env, claves SSH, directorios privados ni la clave configurada dentro de sus contenidos.
 - Añadido script de copia SQLite. Copia real abierta de forma independiente: integrity_check=ok, siete ejercicios, tres comparaciones, dos ejercicios retirados y siete conjuntos de datos. No se sustituyó ni modificó la base personal.
+
+## IA local de menor memoria · 16/10/2026
+
+- Predeterminado y configuración local cambiados a llama3.2:1b. Conservado llama3.2:3b como alternativa, sin borrar modelos ni modificar ejercicios. Ningún servicio de pago añadido.
+- Contexto limitado a 2048 tokens y salida a 140; keep_alive=0 descarga el modelo de memoria tras cada respuesta. La consulta siguiente puede tener coste de carga. Se conservan validación semántica estricta y frases revisadas en español.
+- Prueba real reproducible con scripts/check-ai.mjs: lectura SQLite sin escritura, seis series reales alineadas (99 sesiones comunes hasta 12/10/2026) y un caso insuficiente basado en las primeras 49 observaciones reales. Ambos modelos pasan 7/7. No se refrescan proveedores ni se inventan precios.
+- En este PC, CPU (VRAM=0), mismo contexto: 3b informa de un máximo de 2.330.848.131 bytes asignados al modelo y 7,3–10,0 s por consulta; 1b, 1.454.291.025 bytes y 4,7–4,9 s. Reducción aproximada 37,6 %. Informes privados work/ai-3b.json y work/ai-1b.json. Son muestras de asignación de Ollama, no RAM total del equipo ni garantía de rendimiento en un VPS de 4 GB.
+- Confirmado por HTTP en la aplicación local: AAPL devuelve modelo llama3.2:1b, status validado, texto español y 4,6 s. Ollama ps vacío después de la consulta confirma descarga de memoria. La única escritura de esta comprobación es la caché de explicación; no se modifican ejercicios ni cotizaciones.
+- npm run build correcto y npm test: 34 pruebas correctas. Servidor local arrancado para la verificación con AUTO_CHECKS=false, sin consultas nuevas a proveedores. La configuración de los próximos arranques sigue siendo la existente.
+- Pendiente: probar alojamiento con menos RAM y comprobar velocidad, estabilidad y persistencia en el servidor real; no hay nuevo despliegue público.

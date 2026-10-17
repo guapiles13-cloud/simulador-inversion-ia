@@ -128,3 +128,8 @@ El límite del 20 % se aplica al presupuesto de entrada al cierre; no limita per
 - Confirmado por HTTP en la aplicación local: AAPL devuelve modelo llama3.2:1b, status validado, texto español y 4,6 s. Ollama ps vacío después de la consulta confirma descarga de memoria. La única escritura de esta comprobación es la caché de explicación; no se modifican ejercicios ni cotizaciones.
 - npm run build correcto y npm test: 34 pruebas correctas. Servidor local arrancado para la verificación con AUTO_CHECKS=false, sin consultas nuevas a proveedores. La configuración de los próximos arranques sigue siendo la existente.
 - Pendiente: probar alojamiento con menos RAM y comprobar velocidad, estabilidad y persistencia en el servidor real; no hay nuevo despliegue público.
+
+## 17/10/2026: ampliar ejercicios históricos
+- Añadido botón «Ampliar con nuevos datos»: agrega sesiones comunes descargadas sin avanzar ni ejecutar órdenes. Automática y SPY siguen sincronizadas al avanzar.
+- Compilación correcta y 36 pruebas superadas, incluidas conservación de estado, ampliación con ventanas parciales, idempotencia y rollback por correcciones o desdoblamientos.
+- Prueba local real: ejercicio Demostración automática ampliado con cuatro sesiones hasta 16/10. Estado e historial manual y comparación idénticos a la copia previa; continúa en 12/10 con avance disponible. No se han avanzado sesiones del usuario.

@@ -1,9 +1,10 @@
+import {mergeDataset} from './dataset.ts';
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
 import {DatabaseSync} from 'node:sqlite';
 import {createWallet,initializeWalletDb,readWallet,mutateWallet,units} from './wallet.ts';
 import type {Dataset} from './wallet.ts';
-import {initializeComparisonDb,enableComparison,startComparison,comparisonView,advanceCompared} from './comparison.ts';
+import {initializeComparisonDb,enableComparison,startComparison,comparisonView,advanceCompared,validateComparedData} from './comparison.ts';
 const fixture=():Dataset=>{const dates=Array.from({length:85},(_,i)=>new Date(Date.UTC(2026,0,i+1)).toISOString().slice(0,10));return {dates,assets:Object.fromEntries(['AAPL','AMZN','GOOGL','IBM','MSFT','SPY'].map(symbol=>[symbol,{bars:dates.map((date,i)=>{const close=symbol==='SPY'?'100':i<30?'90':i<50?'100':'90';const open=symbol==='SPY'?'100':i===50?'100':close;return {date,open,close,high:'110',low:'80',volume:'1'};}),splits:[],checkedThrough:'2026-12-31'}])),fx:Array.from({length:86},(_,i)=>({date:new Date(Date.UTC(2025,11,31+i)).toISOString().slice(0,10),usd:'1'}))};};
 function setup(){const db=new DatabaseSync(':memory:');initializeWalletDb(db);initializeComparisonDb(db);const data=fixture();const owner=createWallet(db,'historical',data,'Manual',0,0);enableComparison(db,owner.id,owner.date);return {db,id:owner.id,data};}
 test('Cinco compras en orden alfabético con presupuestos del 20 % y SPY separado',()=>{const {db,id}=setup();const c=comparisonView(db,id)!;assert.deepEqual(c.automatic.orders.map(o=>o.symbol),['AAPL','AMZN','GOOGL','IBM','MSFT']);assert.ok(c.automatic.orders.every(o=>units(o.input)===units('20')));assert.equal(c.benchmark.orders[0].symbol,'SPY');assert.equal(c.benchmark.orders[0].input,'100.000000000000');assert.equal(readWallet(db,id).state.orders.length,0);db.close();});
@@ -12,3 +13,20 @@ test('Habilitar dos veces no duplica órdenes y avanzar mantiene fechas y costes
 test('No aumenta posiciones abiertas; vende al cambiar la señal y SPY permanece',()=>{const {db,id,data}=setup();for(const date of data.dates.slice(50,71))mutateWallet(db,id,(s,d)=>advanceCompared(db,s,d,date));const c=comparisonView(db,id)!;assert.equal(c.automatic.orders.filter(o=>o.side==='buy').length,5);assert.equal(c.automatic.orders.filter(o=>o.side==='sell').length,5);assert.equal(c.automatic.positions.length,0);assert.equal(c.benchmark.orders.length,1);assert.equal(c.benchmark.positions[0].symbol,'SPY');db.close();});
 test('Activación tardía reproduce desde el inicio sin cambiar la cartera manual',()=>{const db=new DatabaseSync(':memory:');initializeWalletDb(db);initializeComparisonDb(db);const d=fixture();const manual=createWallet(db,'historical',d,'Manual',0,0);for(const date of d.dates.slice(50,54))mutateWallet(db,manual.id,(s,data)=>advanceCompared(db,s,data,date));const before=JSON.stringify(readWallet(db,manual.id).state);enableComparison(db,manual.id,d.dates[53]);assert.equal(JSON.stringify(readWallet(db,manual.id).state),before);const c=comparisonView(db,manual.id)!;assert.equal(c.automatic.start,manual.start);assert.equal(c.automatic.equityHistory.length,5);db.close();});
 test('Un desdoblamiento en posiciones automáticas revierte el avance de las tres',()=>{const {db,id,data}=setup();mutateWallet(db,id,(s,d)=>advanceCompared(db,s,d,data.dates[50]));mutateWallet(db,id,(_s,d)=>{d.assets.AAPL.splits=[data.dates[51]];});assert.throws(()=>mutateWallet(db,id,(s,d)=>advanceCompared(db,s,d,data.dates[51])));assert.equal(readWallet(db,id).state.cursor,data.dates[50]);assert.equal(comparisonView(db,id)!.automatic.date,data.dates[50]);db.close();});
+
+function shortData(d:Dataset,end:number,from=0):Dataset{const c=structuredClone(d);c.dates=c.dates.slice(from,end);for(const a of Object.values(c.assets))a.bars=a.bars.slice(from,end);return c;}
+test('Ampliar un histórico conserva las tres carteras y permite continuar con una ventana nueva',()=>{
+ const db=new DatabaseSync(':memory:');initializeWalletDb(db);initializeComparisonDb(db);const full=fixture(),initial=shortData(full,55);const w=createWallet(db,'historical',initial,'Continuar',10,10);enableComparison(db,w.id,w.date);
+ for(const date of initial.dates.slice(50))mutateWallet(db,w.id,(s,d)=>advanceCompared(db,s,d,date));
+ const before=readWallet(db,w.id).state,comparisonBefore=comparisonView(db,w.id);assert.equal(comparisonBefore!.automatic.nextDate,null);
+ const extend=()=>mutateWallet(db,w.id,(s,d)=>{mergeDataset(d,shortData(full,60,5));validateComparedData(db,s,d);});extend();
+ assert.deepEqual(readWallet(db,w.id).state,before);assert.equal(readWallet(db,w.id).data.dates[0],initial.dates[0]);assert.equal(comparisonView(db,w.id)!.automatic.nextDate,full.dates[55]);
+ const {nextDate:_,...oldAuto}=comparisonBefore!.automatic;const {nextDate:__,...newAuto}=comparisonView(db,w.id)!.automatic;assert.deepEqual(newAuto,oldAuto);
+ const {nextDate:___,...oldSpy}=comparisonBefore!.benchmark;const {nextDate:____,...newSpy}=comparisonView(db,w.id)!.benchmark;assert.deepEqual(newSpy,oldSpy);
+ extend();assert.equal(readWallet(db,w.id).data.dates.length,60);
+ mutateWallet(db,w.id,(s,d)=>advanceCompared(db,s,d,full.dates[55]));const result=comparisonView(db,w.id)!;assert.equal(result.automatic.date,full.dates[55]);assert.equal(result.benchmark.date,full.dates[55]);assert.equal(readWallet(db,w.id).state.cursor,full.dates[55]);assert.equal(result.benchmark.orders.length,1);db.close();
+});
+test('Correcciones de precios y desdoblamientos detectados revierten la ampliación completa',()=>{
+ const {db,id,data}=setup();mutateWallet(db,id,(s,d)=>advanceCompared(db,s,d,data.dates[50]));const before=readWallet(db,id),comparisonBefore=comparisonView(db,id);
+ for(const kind of ['price','split','fx']){const fresh=structuredClone(data);if(kind==='price')fresh.assets.AAPL.bars[0].close='91';if(kind==='split')fresh.assets.AAPL.splits=[data.dates[50]];if(kind==='fx')fresh.fx[1].usd='1.2';assert.throws(()=>mutateWallet(db,id,(s,d)=>{mergeDataset(d,fresh);validateComparedData(db,s,d);}));assert.deepEqual(readWallet(db,id),before);assert.deepEqual(comparisonView(db,id),comparisonBefore);}db.close();
+});

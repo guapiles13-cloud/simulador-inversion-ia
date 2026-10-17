@@ -58,3 +58,10 @@ export function comparisonView(db:DatabaseSync,id:string){
  if(c.automatic.cursor!==state.cursor||c.benchmark.cursor!==state.cursor)throw new Error('Las carteras no están alineadas.');
  return {version:c.version,automatic:walletView(c.automatic,data),benchmark:walletView(c.benchmark,data),decisions:c.decisions,notes:['Las decisiones usan solo cierres hasta la sesión actual; se ejecutan en la apertura siguiente.','El límite del 20 % se aplica al presupuesto de una nueva entrada al cierre, incluidos costes. No hay rebalanceo diario; el peso puede cambiar por precios o divisas.','Las compras usan efectivo libre al decidir. Los ingresos de ventas pendientes no se anticipan.','SPY es una referencia por precio: sin dividendos ni impuestos.']};
 }
+
+// Validate new metadata before the enclosing wallet transaction commits.
+export function validateComparedData(db:DatabaseSync,manual:State,data:Dataset){
+ valueState(manual,data);
+ const c=getComparison(db,manual.id);
+ if(c){valueState(c.automatic,data);valueState(c.benchmark,data);}
+}

@@ -8,6 +8,8 @@ import {alignSeries,analyze,requestComment,chartSeries} from './analysis.ts';
 import {initializeWalletDb,createWallet,readWallet,walletView,mutateWallet,queueOrder,advance} from './wallet.ts';
 import type {Dataset,State} from './wallet.ts';
 import {initializeComparisonDb,enableComparison,advanceCompared,comparisonView} from './comparison.ts';
+import {mergeDataset} from './dataset.ts';
+import {validateComparedData} from './comparison.ts';
 import {initializeArchiveDb,isArchived,setArchived,listExercises} from './archive.ts';
 
 const root = resolve(import.meta.dirname, '..');
@@ -27,13 +29,7 @@ function walletDataset():Dataset{
   if(data.count<51||!fxRow)throw new Error('Faltan precios o divisas para crear la cartera.');
   return {dates:data.assets[0].bars.map((b:{date:string})=>b.date),fx:JSON.parse(fxRow.payload).rates,assets:Object.fromEntries(data.assets.map(a=>{const split=db.prepare('SELECT checked_day,dates FROM splits WHERE symbol=?').get(a.symbol) as {checked_day:string;dates:string}|undefined;return [a.symbol,{bars:a.bars,splits:split?JSON.parse(split.dates):[],checkedThrough:split?.checked_day||null}];}))};
 }
-function mergeDataset(old:Dataset,fresh:Dataset){
-  for(const symbol of symbols){const a=old.assets[symbol],b=fresh.assets[symbol];for(const row of b.bars){const prior=a.bars.find(p=>p.date===row.date);if(prior&&JSON.stringify(prior)!==JSON.stringify(row))throw new Error('El proveedor corrigió precios guardados. Se suspende la actualización para revisión.');}
-    a.bars=[...a.bars,...b.bars.filter(r=>!a.bars.some(p=>p.date===r.date))].sort((x,y)=>x.date.localeCompare(y.date));a.splits=[...new Set([...a.splits,...b.splits])].sort();a.checkedThrough=b.checkedThrough;}
-  old.dates=old.assets[symbols[0]].bars.map(b=>b.date).filter(d=>symbols.every(s=>old.assets[s].bars.some(b=>b.date===d))).sort();
-  for(const rate of fresh.fx){const prior=old.fx.find(r=>r.date===rate.date);if(prior&&prior.usd!==rate.usd)throw new Error('El BCE corrigió una referencia guardada. Se suspende la actualización para revisión.');if(!prior)old.fx.push(rate);}
-  old.fx.sort((a,b)=>a.date.localeCompare(b.date));
-}
+
 type Check = {ok: boolean; message: string; checkedAt?: string; count?: number; lastDate?: string};
 function save(name: string, value: Check) {db.prepare('INSERT OR REPLACE INTO checks VALUES (?,?)').run(name,JSON.stringify({...value,checkedAt:new Date().toISOString()}));}
 function checks(): Record<string,Check> {return Object.fromEntries((db.prepare('SELECT * FROM checks').all() as {name:string;value:string}[]).map(r=>[r.name,JSON.parse(r.value)]));}
@@ -136,14 +132,16 @@ createServer(async(req,res)=>{
         if(url.pathname==='/api/wallet/archive'||url.pathname==='/api/wallet/restore'){setArchived(db,input.id,url.pathname.endsWith('/archive'));return json(200,listExercises(db));}
         if(isArchived(db,input.id))throw new Error('Este ejercicio está guardado fuera de la lista. Recupéralo antes de operar o avanzar.');
         if(url.pathname==='/api/wallet/comparison/start'){enableComparison(db,input.id,input.date);const {state,data}=readWallet(db,input.id);return json(200,{...walletView(state,data),comparison:comparisonView(db,state.id)});}
+        let addedSessions=0;
         const result=mutateWallet(db,input.id,(state,data)=>{
           if(input.date!==state.cursor)throw new Error('La sesión de la cartera ha cambiado. Actualiza antes de continuar.');
           if(url.pathname==='/api/wallet/order')queueOrder(state,data,{id:input.orderId,symbol:input.symbol,side:input.side,amount:input.amount});
           else if(url.pathname==='/api/wallet/cancel'){const order=state.orders.find(o=>o.id===input.orderId);if(!order||order.status!=='pending')throw new Error('Solo se pueden cancelar órdenes pendientes.');order.status='cancelled';order.reason='Cancelada manualmente; reserva liberada.';}
           else if(url.pathname==='/api/wallet/advance'){if(state.mode!=='historical')throw new Error('El seguimiento diario solo avanza con datos nuevos.');const next=data.dates[data.dates.indexOf(state.cursor)+1];if(!next)throw new Error('Has llegado al final del histórico guardado.');advanceCompared(db,state,data,next);}
+          else if(url.pathname==='/api/wallet/extend'){if(state.mode!=='historical')throw new Error('Usa incorporar datos en seguimiento diario.');const before=data.dates.length;mergeDataset(data,walletDataset());validateComparedData(db,state,data);addedSessions=data.dates.length-before;}
           else if(url.pathname==='/api/wallet/sync'){if(state.mode!=='daily')throw new Error('La cartera histórica conserva su conjunto de datos.');mergeDataset(data,walletDataset());let next=data.dates[data.dates.indexOf(state.cursor)+1];while(next){advanceCompared(db,state,data,next);next=data.dates[data.dates.indexOf(state.cursor)+1];}}
           else throw new Error('Acción no disponible.');
-        });return json(200,{...result,comparison:comparisonView(db,input.id)});
+        });return json(200,{...result,comparison:comparisonView(db,input.id),...(url.pathname==='/api/wallet/extend'?{addedSessions}:{})});
       }catch(e){return json(400,{error:(e as Error).message});}
     }
     if(url.pathname==='/api/sessions'&&req.method==='GET'){

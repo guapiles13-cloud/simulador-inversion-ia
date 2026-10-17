@@ -1,3 +1,4 @@
+import {recentSummary} from './recent-summary.ts';
 import {createServer} from 'node:http';
 import {runtime,allowRequest,ollamaBaseUrl} from './runtime.ts';
 import {mkdirSync, readFileSync, existsSync} from 'node:fs';
@@ -160,18 +161,20 @@ createServer(async(req,res)=>{
       let body='';for await(const chunk of req){body+=chunk.toString();if(body.length>2048)return json(413,{error:'Solicitud demasiado grande.'});}
       let input:{symbol?:string;asOf?:string};try{input=JSON.parse(body);}catch{return json(400,{error:'Solicitud no válida.'});}
       if(!input||!symbols.includes(input.symbol||'')||(input.asOf&&!/^\d{4}-\d{2}-\d{2}$/.test(input.asOf)))return json(400,{error:'Activo o fecha no válidos.'});
-      const analysis=market(input.asOf).assets.find(a=>a.symbol===input.symbol)!.analysis;
+      const selected=market(input.asOf).assets.find(a=>a.symbol===input.symbol)!;
+      const analysis=selected.analysis;
+      const summary=recentSummary(input.symbol!,selected.bars,input.asOf);
       const model=process.env.OLLAMA_MODEL||'llama3.2:1b';
       const cacheId=JSON.stringify({analysis,model});
       const cached=db.prepare('SELECT value FROM explanations WHERE id=?').get(cacheId) as {value:string}|undefined;
-      if(cached)return json(200,JSON.parse(cached.value));
+      if(cached)return json(200,{...JSON.parse(cached.value),recentSummary:summary});
       explaining=true;
       try{
         const comment=await requestComment(analysis,model);
         const result={analysis,comment,notice:'La IA clasifica conceptos permitidos; el texto mostrado utiliza frases revisadas. No es una predicción ni una orden.'};
         db.prepare('INSERT OR REPLACE INTO explanations VALUES (?,?)').run(cacheId,JSON.stringify(result));
-        return json(200,result);
-      }catch{return json(200,{analysis,comment:{status:'no_disponible',text:'Explicación de IA no disponible o rechazada por no concordar con los datos.'},notice:'Se conserva la explicación calculada; ninguna operación se ejecuta.'});}
+        return json(200,{...result,recentSummary:summary});
+      }catch{return json(200,{analysis,recentSummary:summary,comment:{status:'no_disponible',text:'Explicación de IA no disponible o rechazada por no concordar con los datos.'},notice:'Se conserva la explicación calculada; ninguna operación se ejecuta.'});}
       finally{explaining=false;}
     }
     if(url.pathname==='/api/check'&&req.method==='POST') {void diagnose().catch(()=>save('general',{ok:false,message:'Error en diagnóstico.'}));return json(202,{started:true});}

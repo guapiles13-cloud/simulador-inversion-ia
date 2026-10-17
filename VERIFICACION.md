@@ -136,3 +136,6 @@ El límite del 20 % se aplica al presupuesto de entrada al cierre; no limita per
 
 ### Continuidad del mismo ejercicio
 El botón visible se sustituye por «Actualizar hasta la última sesión»: incorpora y procesa todas las sesiones nuevas en una única transacción, tanto para histórica como para diaria. Mantiene inicio, órdenes anteriores y curvas, y sincroniza automática y SPY. Build correcto y 37 pruebas superadas, incluida idempotencia al actualizar sin datos nuevos. En la interfaz local Mi cartera conserva inicio 03/08/2026 y fecha 16/10/2026.
+
+## 17/10/2026: recordar cartera y consulta rápida de posiciones
+Preferencias locales con manejo de almacenamiento no disponible; selección validada contra los ejercicios existentes y alternativa Mi cartera. Gráfica modal accesible con cierre y Escape, reutilizando cierres y medias; endpoint de solo lectura limitado a la fecha de la cartera y sujeto a la autenticación existente. Compilación correcta y 37 pruebas superadas. Verificación visual: Mi cartera permanece seleccionada tras ir a Mercado y volver, y tras recargar; clic en AAPL abre gráfica desde 21/05 hasta 16/10/2026 en una ventana compacta y Escape la cierra. No se han modificado saldos ni operaciones.

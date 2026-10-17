@@ -154,3 +154,5 @@ Consulta [docs/DESPLIEGUE.md](docs/DESPLIEGUE.md). El servidor conserva por defe
 Los ejercicios históricos pueden continuar con «Actualizar hasta la última sesión», conservando el historial. Las correcciones de precios o divisas se suspenden para revisión.
 
 Actualización continua del mismo ejercicio: «Actualizar hasta la última sesión» incorpora los datos descargados y procesa cada apertura pendiente hasta la última fecha común, con automática y SPY. Conserva el historial anterior y puede usarse tanto en ejercicios históricos como diarios. Las órdenes pendientes pueden ejecutarse durante ese avance. «Avanzar una sesión» permite hacerlo paso a paso.
+
+La interfaz recuerda en este navegador la última pantalla y el último ejercicio seleccionado. Si no existe una preferencia, abre Mi cartera cuando esté disponible. En Posiciones abiertas, pulsa el símbolo del activo para abrir una gráfica pequeña sin cambiar de pantalla. Utiliza los datos del ejercicio hasta su sesión actual, sin mostrar sesiones futuras.

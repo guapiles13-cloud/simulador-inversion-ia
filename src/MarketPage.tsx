@@ -5,7 +5,7 @@ type Market={asOf:string|null;count:number;assets:Asset[]};
 const names:Record<string,string>={AAPL:'Apple',MSFT:'Microsoft',GOOGL:'Alphabet',AMZN:'Amazon',IBM:'IBM',SPY:'SPY · referencia'};
 const price=(value:string|null|undefined)=>value==null?'—':new Intl.NumberFormat('es-ES',{style:'currency',currency:'USD',minimumFractionDigits:2,maximumFractionDigits:4}).format(Number(value));
 const dateLabel=(date:string)=>new Intl.DateTimeFormat('es-ES',{day:'numeric',month:'short',year:'numeric',timeZone:'UTC'}).format(new Date(date+'T00:00:00Z'));
-function PriceChart({points}:{points:Point[]}){
+export function PriceChart({points}:{points:Point[]}){
   const [hover,setHover]=useState<number|null>(null);
   useEffect(()=>setHover(null),[points]);
   if(!points.length)return <p>No hay cierres disponibles para esta fecha.</p>;

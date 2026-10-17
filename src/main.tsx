@@ -1,3 +1,4 @@
+import {readPreference,savePreference} from './preferences.ts';
 import React,{useEffect,useState} from 'react';
 import {createRoot} from 'react-dom/client';
 import './style.css';
@@ -9,7 +10,8 @@ type Check={ok:boolean;message:string;checkedAt?:string;lastDate?:string};
 type Status={busy:boolean;ready:boolean;keyConfigured:boolean;checks:Record<string,Check>};
 const names:Record<string,string>={AAPL:'Apple',MSFT:'Microsoft',GOOGL:'Alphabet',AMZN:'Amazon',IBM:'IBM',SPY:'SPY · referencia',BCE:'Divisa · BCE',ollama:'Asistente local'};
 function App(){
-  const [screen,setScreen]=useState<'market'|'preparation'|'wallet'|'help'>('market');
+  const [screen,setScreen]=useState<'market'|'preparation'|'wallet'|'help'>(()=>{const saved=readPreference('screen');return ['market','preparation','wallet','help'].includes(saved)?saved as 'market'|'preparation'|'wallet'|'help':'wallet';});
+  useEffect(()=>savePreference('screen',screen),[screen]);
   const [status,setStatus]=useState<Status>();const [error,setError]=useState('');
   async function refresh(){try{const r=await fetch('/api/status');if(!r.ok)throw Error();setStatus(await r.json());setError('');}catch{setError('No se puede conectar con el servidor local.');}}
   useEffect(()=>{void refresh();const id=setInterval(()=>void refresh(),3000);return()=>clearInterval(id);},[]);

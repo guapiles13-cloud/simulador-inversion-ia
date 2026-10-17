@@ -151,4 +151,6 @@ El menú «Cómo usar la app» ofrece una guía breve: crear y nombrar un ejerci
 
 Consulta [docs/DESPLIEGUE.md](docs/DESPLIEGUE.md). El servidor conserva por defecto el acceso local. Para un alojamiento se han añadido origen HTTPS, credenciales de prueba, directorio persistente configurable y conexión configurable a Ollama. La imagen Docker no incorpora claves ni datos personales. Todavía no hay URL desplegada; quedan por resolver alojamiento, datos autorizados y disponibilidad de IA. La prueba HTTP aislada puede ejecutarse con `node scripts/check-hosting.mjs`; utiliza una base vacía en work y el puerto 4329, y cierra su servidor al acabar.
 
-Los ejercicios históricos pueden ampliarse con «Ampliar con nuevos datos». Incorpora las sesiones comunes ya descargadas sin avanzar la fecha ni cambiar operaciones anteriores; después se avanza sesión a sesión junto a automática y SPY. Las correcciones de precios o divisas se suspenden para revisión.
+Los ejercicios históricos pueden continuar con «Actualizar hasta la última sesión», conservando el historial. Las correcciones de precios o divisas se suspenden para revisión.
+
+Actualización continua del mismo ejercicio: «Actualizar hasta la última sesión» incorpora los datos descargados y procesa cada apertura pendiente hasta la última fecha común, con automática y SPY. Conserva el historial anterior y puede usarse tanto en ejercicios históricos como diarios. Las órdenes pendientes pueden ejecutarse durante ese avance. «Avanzar una sesión» permite hacerlo paso a paso.

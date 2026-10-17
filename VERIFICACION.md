@@ -133,3 +133,6 @@ El límite del 20 % se aplica al presupuesto de entrada al cierre; no limita per
 - Añadido botón «Ampliar con nuevos datos»: agrega sesiones comunes descargadas sin avanzar ni ejecutar órdenes. Automática y SPY siguen sincronizadas al avanzar.
 - Compilación correcta y 36 pruebas superadas, incluidas conservación de estado, ampliación con ventanas parciales, idempotencia y rollback por correcciones o desdoblamientos.
 - Prueba local real: ejercicio Demostración automática ampliado con cuatro sesiones hasta 16/10. Estado e historial manual y comparación idénticos a la copia previa; continúa en 12/10 con avance disponible. No se han avanzado sesiones del usuario.
+
+### Continuidad del mismo ejercicio
+El botón visible se sustituye por «Actualizar hasta la última sesión»: incorpora y procesa todas las sesiones nuevas en una única transacción, tanto para histórica como para diaria. Mantiene inicio, órdenes anteriores y curvas, y sincroniza automática y SPY. Build correcto y 37 pruebas superadas, incluida idempotencia al actualizar sin datos nuevos. En la interfaz local Mi cartera conserva inicio 03/08/2026 y fecha 16/10/2026.

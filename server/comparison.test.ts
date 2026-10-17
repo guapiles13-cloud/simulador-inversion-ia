@@ -4,7 +4,7 @@ import assert from 'node:assert/strict';
 import {DatabaseSync} from 'node:sqlite';
 import {createWallet,initializeWalletDb,readWallet,mutateWallet,units} from './wallet.ts';
 import type {Dataset} from './wallet.ts';
-import {initializeComparisonDb,enableComparison,startComparison,comparisonView,advanceCompared,validateComparedData} from './comparison.ts';
+import {initializeComparisonDb,enableComparison,startComparison,comparisonView,advanceCompared,validateComparedData,syncComparedData} from './comparison.ts';
 const fixture=():Dataset=>{const dates=Array.from({length:85},(_,i)=>new Date(Date.UTC(2026,0,i+1)).toISOString().slice(0,10));return {dates,assets:Object.fromEntries(['AAPL','AMZN','GOOGL','IBM','MSFT','SPY'].map(symbol=>[symbol,{bars:dates.map((date,i)=>{const close=symbol==='SPY'?'100':i<30?'90':i<50?'100':'90';const open=symbol==='SPY'?'100':i===50?'100':close;return {date,open,close,high:'110',low:'80',volume:'1'};}),splits:[],checkedThrough:'2026-12-31'}])),fx:Array.from({length:86},(_,i)=>({date:new Date(Date.UTC(2025,11,31+i)).toISOString().slice(0,10),usd:'1'}))};};
 function setup(){const db=new DatabaseSync(':memory:');initializeWalletDb(db);initializeComparisonDb(db);const data=fixture();const owner=createWallet(db,'historical',data,'Manual',0,0);enableComparison(db,owner.id,owner.date);return {db,id:owner.id,data};}
 test('Cinco compras en orden alfabético con presupuestos del 20 % y SPY separado',()=>{const {db,id}=setup();const c=comparisonView(db,id)!;assert.deepEqual(c.automatic.orders.map(o=>o.symbol),['AAPL','AMZN','GOOGL','IBM','MSFT']);assert.ok(c.automatic.orders.every(o=>units(o.input)===units('20')));assert.equal(c.benchmark.orders[0].symbol,'SPY');assert.equal(c.benchmark.orders[0].input,'100.000000000000');assert.equal(readWallet(db,id).state.orders.length,0);db.close();});
@@ -29,4 +29,14 @@ test('Ampliar un histórico conserva las tres carteras y permite continuar con u
 test('Correcciones de precios y desdoblamientos detectados revierten la ampliación completa',()=>{
  const {db,id,data}=setup();mutateWallet(db,id,(s,d)=>advanceCompared(db,s,d,data.dates[50]));const before=readWallet(db,id),comparisonBefore=comparisonView(db,id);
  for(const kind of ['price','split','fx']){const fresh=structuredClone(data);if(kind==='price')fresh.assets.AAPL.bars[0].close='91';if(kind==='split')fresh.assets.AAPL.splits=[data.dates[50]];if(kind==='fx')fresh.fx[1].usd='1.2';assert.throws(()=>mutateWallet(db,id,(s,d)=>{mergeDataset(d,fresh);validateComparedData(db,s,d);}));assert.deepEqual(readWallet(db,id),before);assert.deepEqual(comparisonView(db,id),comparisonBefore);}db.close();
+});
+
+test('Actualizar el mismo histórico conserva el pasado y avanza las tres carteras sin repetir órdenes',()=>{
+ const db=new DatabaseSync(':memory:');initializeWalletDb(db);initializeComparisonDb(db);const full=fixture(),initial=shortData(full,55);const w=createWallet(db,'historical',initial,'Continua',10,10);enableComparison(db,w.id,w.date);
+ for(const date of initial.dates.slice(50))mutateWallet(db,w.id,(s,d)=>advanceCompared(db,s,d,date));
+ const old=readWallet(db,w.id).state,oldComparison=comparisonView(db,w.id)!;
+ const sync=()=>mutateWallet(db,w.id,(s,d)=>syncComparedData(db,s,d,shortData(full,60,5)));sync();
+ const current=readWallet(db,w.id).state,c=comparisonView(db,w.id)!;assert.equal(current.start,old.start);assert.equal(current.cursor,full.dates[59]);assert.equal(current.mode,'historical');assert.deepEqual(current.orders,old.orders);assert.deepEqual(current.equityHistory.slice(0,old.equityHistory.length),old.equityHistory);
+ assert.equal(c.automatic.date,current.cursor);assert.equal(c.benchmark.date,current.cursor);assert.deepEqual(c.automatic.equityHistory.slice(0,oldComparison.automatic.equityHistory.length),oldComparison.automatic.equityHistory);assert.equal(c.benchmark.orders.length,1);
+ const before=readWallet(db,w.id);const beforeComparison=comparisonView(db,w.id);sync();assert.deepEqual(readWallet(db,w.id),before);assert.deepEqual(comparisonView(db,w.id),beforeComparison);db.close();
 });

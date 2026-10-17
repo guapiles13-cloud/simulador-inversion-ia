@@ -9,7 +9,7 @@ import {initializeWalletDb,createWallet,readWallet,walletView,mutateWallet,queue
 import type {Dataset,State} from './wallet.ts';
 import {initializeComparisonDb,enableComparison,advanceCompared,comparisonView} from './comparison.ts';
 import {mergeDataset} from './dataset.ts';
-import {validateComparedData} from './comparison.ts';
+import {validateComparedData,syncComparedData} from './comparison.ts';
 import {initializeArchiveDb,isArchived,setArchived,listExercises} from './archive.ts';
 
 const root = resolve(import.meta.dirname, '..');
@@ -139,7 +139,7 @@ createServer(async(req,res)=>{
           else if(url.pathname==='/api/wallet/cancel'){const order=state.orders.find(o=>o.id===input.orderId);if(!order||order.status!=='pending')throw new Error('Solo se pueden cancelar órdenes pendientes.');order.status='cancelled';order.reason='Cancelada manualmente; reserva liberada.';}
           else if(url.pathname==='/api/wallet/advance'){if(state.mode!=='historical')throw new Error('El seguimiento diario solo avanza con datos nuevos.');const next=data.dates[data.dates.indexOf(state.cursor)+1];if(!next)throw new Error('Has llegado al final del histórico guardado.');advanceCompared(db,state,data,next);}
           else if(url.pathname==='/api/wallet/extend'){if(state.mode!=='historical')throw new Error('Usa incorporar datos en seguimiento diario.');const before=data.dates.length;mergeDataset(data,walletDataset());validateComparedData(db,state,data);addedSessions=data.dates.length-before;}
-          else if(url.pathname==='/api/wallet/sync'){if(state.mode!=='daily')throw new Error('La cartera histórica conserva su conjunto de datos.');mergeDataset(data,walletDataset());let next=data.dates[data.dates.indexOf(state.cursor)+1];while(next){advanceCompared(db,state,data,next);next=data.dates[data.dates.indexOf(state.cursor)+1];}}
+          else if(url.pathname==='/api/wallet/sync')syncComparedData(db,state,data,walletDataset());
           else throw new Error('Acción no disponible.');
         });return json(200,{...result,comparison:comparisonView(db,input.id),...(url.pathname==='/api/wallet/extend'?{addedSessions}:{})});
       }catch(e){return json(400,{error:(e as Error).message});}

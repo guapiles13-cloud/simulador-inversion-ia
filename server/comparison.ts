@@ -1,3 +1,4 @@
+import {mergeDataset} from './dataset.ts';
 import type {DatabaseSync} from 'node:sqlite';
 import {analyze} from './analysis.ts';
 import {newState,queueOrder,advance,valueState,walletView,readWallet,units,decimal,blockReason} from './wallet.ts';
@@ -64,4 +65,10 @@ export function validateComparedData(db:DatabaseSync,manual:State,data:Dataset){
  valueState(manual,data);
  const c=getComparison(db,manual.id);
  if(c){valueState(c.automatic,data);valueState(c.benchmark,data);}
+}
+
+export function syncComparedData(db:DatabaseSync,state:State,data:Dataset,fresh:Dataset){
+ mergeDataset(data,fresh);validateComparedData(db,state,data);
+ let next=data.dates[data.dates.indexOf(state.cursor)+1];
+ while(next){advanceCompared(db,state,data,next);next=data.dates[data.dates.indexOf(state.cursor)+1];}
 }

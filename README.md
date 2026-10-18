@@ -141,7 +141,7 @@ Condiciones acordadas: 100 EUR por cartera, fracciones, 0,1 % de comisión y 0,1
 
 ## Verificación
 
-`npm test` incluye 34 pruebas: proveedores, fechas, indicadores, comentarios, operaciones, divisas, costes, reservas, bloqueos, persistencia, restauración, retirada de ejercicios y comparación automática. Incluye múltiples ventas con pérdidas, invariancia ante cambios en datos futuros, activación repetida/tardía, compras limitadas y ausencia de aumentos diarios de posiciones. `npm run build` comprueba tipos y compila la interfaz.
+`npm test` incluye 39 pruebas: proveedores, fechas, indicadores, comentarios, operaciones, divisas, costes, reservas, bloqueos, persistencia, restauración, retirada de ejercicios y comparación automática. Incluye múltiples ventas con pérdidas, invariancia ante cambios en datos futuros, activación repetida/tardía, compras limitadas, ausencia de aumentos diarios de posiciones, ampliación del histórico y resumen de últimas semanas. `npm run build` comprueba tipos y compila la interfaz.
 
 ## Ayuda dentro de la aplicación
 
@@ -149,7 +149,7 @@ El menú «Cómo usar la app» ofrece una guía breve: crear y nombrar un ejerci
 
 ## Preparación para alojamiento
 
-Consulta [docs/DESPLIEGUE.md](docs/DESPLIEGUE.md). El servidor conserva por defecto el acceso local. Para un alojamiento se han añadido origen HTTPS, credenciales de prueba, directorio persistente configurable y conexión configurable a Ollama. La imagen Docker no incorpora claves ni datos personales. Todavía no hay URL desplegada; quedan por resolver alojamiento, datos autorizados y disponibilidad de IA. La prueba HTTP aislada puede ejecutarse con `node scripts/check-hosting.mjs`; utiliza una base vacía en work y el puerto 4329, y cierra su servidor al acabar.
+Consulta [docs/DESPLIEGUE.md](docs/DESPLIEGUE.md). El servidor conserva por defecto el acceso local. La aplicación está desplegada en [OVHcloud con HTTPS](https://vps-e30b6a76.vps.ovh.ca/), con acceso de prueba compartido, SQLite persistente y Ollama `llama3.2:1b`. La instalación real es nativa en Ubuntu, con arranque automático; el Dockerfile se conserva como alternativa preparada, sin afirmar que se haya ensayado. Las credenciales se facilitan por separado y las claves del proveedor permanecen en el servidor. La exhibición de cotizaciones al jurado y en vídeo requiere aclarar las condiciones del proveedor. La prueba HTTP aislada puede ejecutarse con `node scripts/check-hosting.mjs`; utiliza una base vacía en work y el puerto 4329, y cierra su servidor al acabar.
 
 Los ejercicios históricos pueden continuar con «Actualizar hasta la última sesión», conservando el historial. Las correcciones de precios o divisas se suspenden para revisión.
 

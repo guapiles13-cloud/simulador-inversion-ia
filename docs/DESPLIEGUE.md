@@ -55,7 +55,7 @@ Texto para que el titular de la cuenta pueda consultar al proveedor; no se ha en
 
 ## Instalación real en OVHcloud
 
-- Código instalado: commit 755fcf4. Node v24.22.0, descarga oficial con SHA256 comprobado.
+- Código de servidor instalado: commit 755fcf4; interfaz compacta actualizada desde 7b47ea8. Node v24.22.0, descarga oficial con SHA256 comprobado. Los identificadores de la copia pública cambian al filtrar el historial.
 - Aplicación /opt/simulador, usuario de servicio sin acceso interactivo; SQLite persistente /var/lib/simulador. Arranque automático y reinicio por fallo mediante systemd.
 - Archivo .env privado del servidor, sin credenciales en Git ni en las respuestas. El titular autorizó expresamente transferir su clave de Alpha Vantage, activar servicios y cortafuegos.
 - Ollama escucha solo en 127.0.0.1:11434, llama3.2:1b, una inferencia paralela; la app conserva contexto 2048 y descarga el modelo de memoria al terminar.

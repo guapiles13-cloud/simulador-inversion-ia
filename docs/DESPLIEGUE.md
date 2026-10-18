@@ -1,6 +1,6 @@
 # Preparación del despliegue para el hackatón
 
-Revisión: 14 de octubre de 2026. Estado: preparado en código; todavía no hay una URL alojada ni se ha contratado un servicio.
+Revisión: 18 de octubre de 2026. Estado: desplegado en un VPS OVHcloud Ubuntu 24.04 (2 vCPU, 4 GB, 40 GB). URL HTTPS protegida: https://vps-e30b6a76.vps.ovh.ca. Renovación manual sin compromiso, vencimiento 18/11/2026.
 
 ## Lo que ya está preparado
 
@@ -32,11 +32,11 @@ La instancia de evaluación debe utilizar su propia base, sin copiar las cartera
 
 ## Decisiones pendientes antes de publicar
 
-1. Elegir alojamiento, acceso a la cuenta y presupuesto autorizado. No se ha contratado ningún servicio de pago.
+1. Alojamiento contratado por el usuario: OVHcloud VPS-1 2027 en Beauharnois, Canadá; primer mes autorizado por 5,43 EUR con IVA. No se han ampliado recursos.
 2. Confirmar las condiciones de uso de las cotizaciones ante acceso del jurado. Alpha Vantage describe su licencia como personal y no comercial y considera usos fuera de actividades privadas e individuales dentro del alcance comercial. No se ha confirmado permiso para compartir el histórico. No publicar precios ni una copia de SQLite en GitHub.
-3. Probar Ollama en la infraestructura elegida. No presentar respuestas guardadas como inferencia nueva ni sustituirlo por una API de pago sin decisión del usuario.
-4. Crear GitHub preservando el historial local y revisar secretos antes de enviar. GitHub está conectado, pero todavía no hay remoto para este proyecto.
-5. Comprobar URL, credenciales, crear/operar/avanzar, comparación, IA, reinicio y conservación de datos desde otro dispositivo. Docker no está instalado en el equipo: la imagen todavía no se ha construido.
+3. Ollama llama3.2:1b probado en el VPS: 7/7 respuestas estructuradas validadas (seis activos y datos insuficientes), entre 14,9 y 16,0 segundos. No se ha añadido una API de IA de pago.
+4. Repositorio público creado mediante exportación depurada del historial: https://github.com/guapiles13-cloud/simulador-inversion-ia. Publicar la versión final antes de entregar; nunca enviar datos, claves o capturas con cotizaciones.
+5. HTTPS, acceso privado (401 sin credenciales), protección de origen (403), creación/compra/avance/comparación, IA y persistencia tras reinicio del servicio comprobados. Pendiente prueba visual del usuario desde navegador habitual y móvil. La instalación usa Node 24 nativo y systemd; no se ha usado Docker.
 
 ## Opciones de alojamiento revisadas
 
@@ -52,3 +52,15 @@ Fuentes oficiales consultadas el 14/10/2026:
 Texto para que el titular de la cuenta pueda consultar al proveedor; no se ha enviado ningún mensaje:
 
 > Estoy desarrollando una aplicación educativa sin operaciones reales para un hackatón de mi curso. Utiliza series diarias compactas de AAPL, MSFT, GOOGL, AMZN, IBM y SPY con mi API key gratuita. Necesito que un jurado pueda acceder a una demostración alojada, protegida con credenciales de prueba, durante la evaluación del 20 al 27 de octubre de 2026, y mostrar gráficos en un vídeo del proyecto. No publicaré la API key ni los datos brutos en GitHub. ¿Está permitido este uso con mi cuenta gratuita? Si no, ¿qué autorización necesitaría para la demostración y el vídeo?
+
+## Instalación real en OVHcloud
+
+- Código instalado: commit 755fcf4. Node v24.22.0, descarga oficial con SHA256 comprobado.
+- Aplicación /opt/simulador, usuario de servicio sin acceso interactivo; SQLite persistente /var/lib/simulador. Arranque automático y reinicio por fallo mediante systemd.
+- Archivo .env privado del servidor, sin credenciales en Git ni en las respuestas. El titular autorizó expresamente transferir su clave de Alpha Vantage, activar servicios y cortafuegos.
+- Ollama escucha solo en 127.0.0.1:11434, llama3.2:1b, una inferencia paralela; la app conserva contexto 2048 y descarga el modelo de memoria al terminar.
+- Caddy publica HTTPS con certificado válido en el nombre del VPS. Cortafuegos activo: entrada TCP 22/80/443; puertos internos 4318 y 11434 inaccesibles desde Internet.
+- Consumo observado: app ~80 MB; pico de servicio Ollama ~2,87 GB en las pruebas iniciales. No es una garantía para más usuarios o modelos.
+- Base separada con precios/divisas guardados; carteras personales del ordenador no copiadas. Hay una cartera nueva Mi cartera y el ensayo del servidor está retirado y recuperable.
+- AUTO_CHECKS=false: la actualización de conexiones se solicita manualmente y respeta el control diario. Última sesión común guardada: 16/10/2026.
+- Usuario y contraseña web en archivo privado local work/ovh-access/acceso-web.txt, excluido de Git. Las restricciones del navegador integrado pueden impedir su diálogo de autenticación; usar navegador habitual para la prueba visual.

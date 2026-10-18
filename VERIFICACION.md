@@ -142,3 +142,6 @@ Preferencias locales con manejo de almacenamiento no disponible; selección vali
 
 ## 17/10/2026: comentario útil de las últimas semanas
 Resumen calculado en servidor con cierres reales hasta el corte elegido, 5/20 intervalos y rangos de cierres. Se muestra incluso si la IA no responde y se recalcula junto a respuestas de IA almacenadas. No cambia la entrada, opciones, modelo ni número de consultas de Ollama; no se han añadido servicios o fuentes. Compilación y 39 pruebas correctas: subida, caída, plano, datos insuficientes y exclusión de futuro. UI comprobada en Apple a 16/10/2026 con resumen y comentario validado. No se ha medido de nuevo el consumo total del proceso; el modelo mantiene su configuración previa.
+
+## 18/10/2026: despliegue real en OVHcloud
+HTTPS 200 en /api/health; carteras sin credenciales 401; origen ajeno 403. Compra virtual y avance sincronizado probados con datos reales guardados. Persistencia de fecha, saldo y órdenes confirmada tras reiniciar el servicio. Inicio automático habilitado para aplicación, Ollama y Caddy. 7/7 inferencias nuevas validadas: seis activos y caso sin 50 cierres, 14,9–16,0 s. Puertos 4318 y 11434 inaccesibles desde Internet; Ollama solo loopback. El usuario aún debe comprobar la interfaz desde su navegador habitual; no se afirma prueba en móvil. No se ejecutan operaciones reales.

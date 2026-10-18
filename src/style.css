@@ -8,3 +8,38 @@
 .help-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}.help-grid article{padding:24px}.help-grid h2{font-size:19px}.help-grid p,.help-start li,.help-start~section p{font-size:14px;line-height:1.85}.help-start ol{padding-left:24px}.help-start li{padding:5px 0}.mobile-tabs button{margin:3px}@media(max-width:850px){.help-grid{grid-template-columns:1fr}}
 
 .position-symbol{background:transparent;color:#23563f;padding:4px 2px;font-size:12px;text-decoration:underline;text-underline-offset:3px}.position-symbol:hover{background:#eaf0e6}.position-chart-dialog{width:min(680px,calc(100vw - 32px));max-height:85vh;overflow:auto;border:1px solid #ccd8ce;border-radius:14px;padding:22px;color:#203a33;background:#fff;box-shadow:0 18px 70px #123a3240}.position-chart-dialog::backdrop{background:#102f2866}.position-chart-dialog h2{font-size:20px;margin:0}.position-chart-dialog .section-heading{flex-direction:row;align-items:center}.position-chart-dialog .chart-legend{flex-wrap:wrap;gap:12px}.position-chart-dialog .point-detail{gap:10px}.position-chart-dialog .point-explorer{margin:12px 0}
+/* Cabeceras compactas: más información visible sin reducir la letra de las tablas. */
+main{padding:16px 30px}
+header{font-size:12px}
+.pill{padding:5px 10px}
+aside{padding:24px 20px}
+.subtitle{margin:10px 0 24px}
+.side-note{padding-top:35px}
+.market-heading{padding:12px 0 10px}
+.market-heading .eyebrow,.hero .eyebrow{margin:8px 0}
+.market-heading h1,.hero h1{font-size:clamp(25px,2.5vw,34px);line-height:1.15;margin:8px 0;letter-spacing:-.8px}
+.market-heading h1 br,.hero h1 br{display:none}
+.market-heading h1 em,.hero h1 em{margin-left:.2em}
+.market-heading>p:last-child,.hero p:not(.eyebrow){font-size:13px;line-height:1.5;margin:8px 0;max-width:900px}
+.hero{padding:14px 0 16px;gap:20px}
+.balance{padding:16px;gap:8px;border-radius:12px}
+.balance strong{font-size:28px}
+.market-toolbar{padding:14px;gap:12px}
+.market-stats{margin:14px 0;gap:12px}
+.market-stats article{padding:14px;gap:8px}
+.market-stats article>strong{font-size:25px}
+.section{margin-top:18px}
+.section-heading{margin-bottom:12px}
+.chart-card,.comparison-panel{padding:18px}
+.comparison-stats{margin:14px 0;gap:12px}
+.comparison-stats article{padding:14px;gap:8px}
+.comparison-stats strong{font-size:24px}
+.chart-card>.price-chart,.comparison-panel>.price-chart{max-height:250px}
+.point-explorer{margin:12px 0}
+.banner{padding:14px 18px}
+.wallet-session{margin-top:12px}
+@media(max-width:850px){main{padding:16px 20px}.hero{flex-direction:row;align-items:center}.market-stats{grid-template-columns:repeat(3,minmax(0,1fr))}.market-stats article>strong{font-size:22px}}
+@media(max-width:650px){.hero{flex-direction:column;align-items:stretch}.market-stats{grid-template-columns:1fr}.comparison-stats{grid-template-columns:1fr}.market-heading h1,.hero h1{font-size:27px}.market-toolbar{gap:10px}.chart-card,.comparison-panel{padding:14px}}
+@media(max-width:580px){main{padding:14px}.mobile-tabs{margin-top:10px}.market-heading{padding-top:8px}}
+
+.layout>aside{position:sticky;top:0;height:100vh;overflow-y:auto}.wallet-update-help{font-size:12px;color:#64776d;margin:10px 0}.wallet-update-help summary{cursor:pointer}.wallet-update-help p{margin:8px 0}.exercise-cleanup{margin:8px 0}.exercise-cleanup details{padding:5px 0}

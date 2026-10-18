@@ -21,3 +21,7 @@ Duración objetivo: 4 minutos y 30 segundos. Máximo exigido: 5 minutos. Guion p
 - Confirmar condiciones de exhibición de cotizaciones. No mostrar .env, paneles con claves, claves SSH privadas, correos, datos bancarios ni códigos de acceso.
 - Capturar pantalla y voz; el guion no sustituye una demostración de la aplicación funcionando.
 - Revisar duración, legibilidad y audio. Subir el vídeo a la misma carpeta de Drive que los dos Google Docs y comprobar su enlace.
+
+## Ejercicio histórico preparado en la web para el jurado — 18/10/2026
+
+Seleccionar «Demostración para el jurado · 7–16 octubre» en Cartera virtual. Es una simulación retrospectiva preparada el 18/10, no operaciones registradas en aquellas fechas reales. Tiene ocho sesiones (7, 8, 9, 12, 13, 14, 15 y 16 de octubre), con los datos anteriores necesarios para calcular medias. Compra AAPL/GOOGL/IBM tras decisión del 7 para apertura del 8; vende GOOGL tras decisión del 9 para apertura del 12; compra MSFT en apertura del 13; vende media posición AAPL en apertura del 14. Costes iguales del 0,1 % de comisión y 0,1 % de empeoramiento para las tres carteras. No se han optimizado operaciones ni ocultado pérdidas. Mostrar gráfico de comparación, historial de seis órdenes ejecutadas y desplegar Evolución del valor de la cartera para las ocho valoraciones diarias. Los resultados concretos y la copia de respaldo se registran en la documentación privada de entrega, sin publicar precios.

@@ -145,3 +145,6 @@ Resumen calculado en servidor con cierres reales hasta el corte elegido, 5/20 in
 
 ## 18/10/2026: despliegue real en OVHcloud
 HTTPS 200 en /api/health; carteras sin credenciales 401; origen ajeno 403. Compra virtual y avance sincronizado probados con datos reales guardados. Persistencia de fecha, saldo y órdenes confirmada tras reiniciar el servicio. Inicio automático habilitado para aplicación, Ollama y Caddy. 7/7 inferencias nuevas validadas: seis activos y caso sin 50 cierres, 14,9–16,0 s. Puertos 4318 y 11434 inaccesibles desde Internet; Ollama solo loopback. El usuario aún debe comprobar la interfaz desde su navegador habitual; no se afirma prueba en móvil. No se ejecutan operaciones reales.
+
+## 18/10/2026: demostración breve para el jurado
+Ejercicio independiente en OVHcloud de 7 a 16 de octubre (ocho sesiones), 100 EUR virtuales, cuatro compras y dos ventas ejecutadas siempre en apertura posterior. Historial diario de ocho valores, automática y SPY alineados; seis operaciones ejecutadas. Se conservan los demás ejercicios y se hizo copia SQLite antes de crear la demostración. Preparación retrospectiva educativa, sin optimización ni afirmación de ejecución en fechas reales. Comprobación por HTTPS correcta.
